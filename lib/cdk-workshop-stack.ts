@@ -8,8 +8,13 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import { Bucket, BucketAccessControl } from "aws-cdk-lib/aws-s3";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
-import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
+import {
+  Distribution,
+  OriginAccessIdentity,
+  ErrorResponse,
+} from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { CacheControl } from "aws-cdk-lib/aws-s3-deployment";
 
 export class CdkWorkshopStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -20,22 +25,35 @@ export class CdkWorkshopStack extends cdk.Stack {
       accessControl: BucketAccessControl.PRIVATE,
     });
 
-    new BucketDeployment(this, "BucketDeployment", {
-      destinationBucket: bucket,
-      sources: [Source.asset(path.resolve(__dirname, "../website"))],
-    });
-
     const originAccessIdentity = new OriginAccessIdentity(
       this,
       "OriginAccessIdentity"
     );
+
     bucket.grantRead(originAccessIdentity);
 
-    new Distribution(this, "Distribution", {
+    const distribution = new Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
       defaultBehavior: {
         origin: new S3Origin(bucket, { originAccessIdentity }),
       },
+      errorResponses: [
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: "/index.html",
+        },
+      ],
+    });
+
+    new BucketDeployment(this, "BucketDeployment", {
+      sources: [
+        Source.asset(path.resolve(__dirname, "../website/tests3/build")),
+      ],
+      cacheControl: [CacheControl.fromString("max-age=3000,public,immutable")],
+      destinationBucket: bucket,
+      distribution,
+      distributionPaths: ["/*"],
     });
 
     //table constructor
