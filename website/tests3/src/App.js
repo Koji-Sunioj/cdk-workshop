@@ -5,6 +5,7 @@ import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import SignUp from "./pages/SignUp";
+import SignIn from "./pages/SignIn";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <NavBar />
       <br />
       <Routes>
+        <Route path="/sign-in" element={<SignIn />} />
         <Route path="/features" element={<Features />} />
         <Route path="/pricing" element={<Prices />} />
         <Route path="/" element={<HomePage />} />

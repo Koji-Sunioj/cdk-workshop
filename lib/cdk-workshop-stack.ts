@@ -118,10 +118,16 @@ export class CdkWorkshopStack extends cdk.Stack {
     const signUpapi = new apigw.LambdaRestApi(this, "SignUpEndpoint", {
       handler: signUp,
       proxy: false,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigw.Cors.ALL_ORIGINS,
+      },
     });
 
-    //creating paths and methods for api
     const auth = signUpapi.root.addResource("auth");
     auth.addMethod("POST");
+    //creating paths and methods for api
+    const newAuth = signUpapi.root.addResource("sign-up");
+    newAuth.addMethod("POST");
+    newAuth.addMethod("PATCH");
   }
 }

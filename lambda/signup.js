@@ -1,11 +1,14 @@
 const AWS = require("aws-sdk");
 const service = new AWS.CognitoIdentityServiceProvider();
 
-exports.handler = async function (event, context) {
+exports.handler = async function (event) {
+  console.log("hit");
   const { httpMethod, resource, pathParameters, body } = event;
   const routeKey = `${httpMethod} ${resource}`;
+
   console.log(routeKey);
 
+  let params;
   let returnObject = {};
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -14,24 +17,30 @@ exports.handler = async function (event, context) {
     "Access-Control-Allow-Methods": "GET,POST,DELETE,PATCH",
   };
 
-  let params = {
-    UserPoolClient: process.env.USER_POOL_CLIENT,
-  };
-
   switch (routeKey) {
     case "POST /auth":
-      returnObject.message = "hey you";
+      returnObject = { ...JSON.parse(body) };
+      break;
+
+    case "POST /sign-up":
       const { email, password } = JSON.parse(body);
-      const shit = {
+      params = {
         ClientId: process.env.USER_POOL_CLIENT,
         Password: password,
         Username: email,
       };
-      console.log("before service invoke");
-      const hey = await service.signUp(shit).promise();
-      console.log(hey);
-
+      const newUser = await service.signUp(params).promise();
+      returnObject = { ...newUser };
       break;
+    case "PATCH /sign-up":
+      const { username, confirmationCode } = JSON.parse(body);
+      params = {
+        ClientId: process.env.USER_POOL_CLIENT,
+        Username: username,
+        ConfirmationCode: confirmationCode,
+      };
+      await service.confirmSignUp(params).promise();
+      returnObject = { message: "successfully created" };
   }
 
   return {
