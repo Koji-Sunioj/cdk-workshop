@@ -18,6 +18,9 @@ function NavBar() {
             <Nav.Link as={Link} to="/pricing">
               Pricing
             </Nav.Link>
+            <Nav.Link as={Link} to="/sign-up">
+              Sign Up
+            </Nav.Link>
           </Nav>
         </Container>
       </Navbar>

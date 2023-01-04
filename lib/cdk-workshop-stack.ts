@@ -2,23 +2,38 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-//import { HitCounter } from "./hitcounter";
 
 //s3 and cloud front deployment imports
 import { Bucket, BucketAccessControl } from "aws-cdk-lib/aws-s3";
 import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
-import {
-  Distribution,
-  OriginAccessIdentity,
-  ErrorResponse,
-} from "aws-cdk-lib/aws-cloudfront";
+import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { CacheControl } from "aws-cdk-lib/aws-s3-deployment";
+
+import * as cognito from "aws-cdk-lib/aws-cognito";
 
 export class CdkWorkshopStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    const userPool = new cognito.UserPool(this, "UserPool", {
+      selfSignUpEnabled: true, // Allow users to sign up
+      autoVerify: { email: true }, // Verify email addresses by sending a verification code
+      signInAliases: { email: true }, // Set email as an alias
+      passwordPolicy: {
+        minLength: 8,
+        requireLowercase: true,
+        requireUppercase: true,
+        requireDigits: false,
+        requireSymbols: false,
+      },
+    });
+
+    const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+      userPool,
+      generateSecret: false, // Don't need to generate secret for web app running on browsers
+    });
 
     //s3 and cloud front deployment constructors
     const bucket = new Bucket(this, "Bucket", {
@@ -89,5 +104,24 @@ export class CdkWorkshopStack extends cdk.Stack {
     album.addMethod("GET");
     album.addMethod("DELETE");
     album.addMethod("PATCH");
+
+    const signUp = new lambda.Function(this, "SignUpHandler", {
+      runtime: lambda.Runtime.NODEJS_14_X,
+      code: lambda.Code.fromAsset("lambda"),
+      handler: "signup.handler",
+      environment: {
+        USER_POOL_CLIENT: userPoolClient.userPoolClientId,
+      },
+    });
+
+    //api gateway constructor
+    const signUpapi = new apigw.LambdaRestApi(this, "SignUpEndpoint", {
+      handler: signUp,
+      proxy: false,
+    });
+
+    //creating paths and methods for api
+    const auth = signUpapi.root.addResource("auth");
+    auth.addMethod("POST");
   }
 }
