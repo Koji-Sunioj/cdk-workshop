@@ -3,7 +3,11 @@ import { Link } from "react-router-dom";
 import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { globalContext } from "../App";
+import { useContext } from "react";
+
 function NavBar() {
+  const [login, setLogin] = useContext(globalContext);
   return (
     <>
       <Navbar bg="dark" variant="dark">
@@ -18,12 +22,22 @@ function NavBar() {
             <Nav.Link as={Link} to="/pricing">
               Pricing
             </Nav.Link>
-            <Nav.Link as={Link} to="/sign-up">
-              Sign Up
-            </Nav.Link>
-            <Nav.Link as={Link} to="/sign-in">
-              Sign In
-            </Nav.Link>
+            {login !== null ? (
+              <Nav.Link
+                to="/sign-out"
+                onClick={() => {
+                  setLogin(null);
+                  localStorage.removeItem("userName");
+                  localStorage.removeItem("AccessToken");
+                }}
+              >
+                Sign Out
+              </Nav.Link>
+            ) : (
+              <Nav.Link as={Link} to="/sign-in">
+                Sign In
+              </Nav.Link>
+            )}
           </Nav>
         </Container>
       </Navbar>

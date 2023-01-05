@@ -3,13 +3,17 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { useState } from "react";
+import { useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { globalContext } from "../App";
+import { Link } from "react-router-dom";
 
 function SignIn() {
+  const [login, setLogin] = useContext(globalContext);
+  const navigate = useNavigate();
+
   const signInUrl =
     "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/auth/";
-
-  const [user, setUser] = useState(null);
 
   const signIn = async (event) => {
     event.preventDefault();
@@ -17,13 +21,24 @@ function SignIn() {
       email: { value: email },
       password: { value: password },
     } = event.currentTarget;
+    try {
+      const token = await fetch(signInUrl, {
+        method: "POST",
+        body: JSON.stringify({ userName: email, password: password }),
+      }).then((response) => response.json());
 
-    const token = await fetch(signInUrl, {
-      method: "POST",
-      body: JSON.stringify({ userName: email, password: password }),
-    }).then((response) => response.json());
+      setLogin({ userName: email, ...token });
+      console.log(token);
 
-    console.log(token);
+      token.hasOwnProperty("AccessToken") &&
+        (() => {
+          localStorage.setItem("userName", email);
+          localStorage.setItem("AccessToken", token.AccessToken);
+          navigate("/");
+        })();
+    } catch {
+      alert("there was an error");
+    }
   };
 
   return (
@@ -53,6 +68,8 @@ function SignIn() {
                 Submit
               </Button>
             </Form>
+            <br />
+            <Link to={"/sign-up"}>Don't have an account yet? Sign up!</Link>
           </Col>
         </Row>
       </Container>

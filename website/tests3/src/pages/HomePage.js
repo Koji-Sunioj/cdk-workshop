@@ -1,19 +1,16 @@
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import { useEffect } from "react";
+// import { useEffect } from "react";
 
 function HomePage() {
-  const url = process.env.REACT_APP_NOT_SECRET_CODE;
-  console.log(url);
-
-  useEffect(() => {
-    // fetch("https://0uw19azc75.execute-api.eu-north-1.amazonaws.com/prod/albums")
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log(data);
-    //   });
-  }, []);
+  // useEffect(() => {
+  //   // fetch("https://0uw19azc75.execute-api.eu-north-1.amazonaws.com/prod/albums")
+  //   //   .then((response) => response.json())
+  //   //   .then((data) => {
+  //   //     console.log(data);
+  //   //   });
+  // }, []);
 
   return (
     <>

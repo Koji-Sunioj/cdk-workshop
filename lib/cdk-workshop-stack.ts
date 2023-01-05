@@ -31,6 +31,9 @@ export class CdkWorkshopStack extends cdk.Stack {
     });
 
     const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
+      authFlows: {
+        userPassword: true,
+      },
       userPool,
       generateSecret: false, // Don't need to generate secret for web app running on browsers
     });

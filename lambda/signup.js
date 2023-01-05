@@ -3,12 +3,12 @@ const service = new AWS.CognitoIdentityServiceProvider();
 
 exports.handler = async function (event) {
   console.log("hit");
-  const { httpMethod, resource, pathParameters, body } = event;
+  const { httpMethod, resource, body } = event;
   const routeKey = `${httpMethod} ${resource}`;
 
   console.log(routeKey);
 
-  let params;
+  let params, password, email, userName;
   let returnObject = {};
   const headers = {
     "Access-Control-Allow-Origin": "*",
@@ -19,18 +19,41 @@ exports.handler = async function (event) {
 
   switch (routeKey) {
     case "POST /auth":
-      returnObject = { ...JSON.parse(body) };
+      ({ userName, password } = JSON.parse(body));
+      params = {
+        AuthFlow: "USER_PASSWORD_AUTH",
+        ClientId: process.env.USER_POOL_CLIENT,
+        AuthParameters: { PASSWORD: password, USERNAME: userName },
+      };
+      const {
+        AuthenticationResult: { AccessToken },
+      } = await service.initiateAuth(params).promise();
+
+      returnObject = { AccessToken: AccessToken };
       break;
 
     case "POST /sign-up":
-      const { email, password } = JSON.parse(body);
-      params = {
-        ClientId: process.env.USER_POOL_CLIENT,
-        Password: password,
-        Username: email,
-      };
-      const newUser = await service.signUp(params).promise();
-      returnObject = { ...newUser };
+      ({ email, password } = JSON.parse(body));
+      const { queryStringParameters } = event;
+      if (
+        queryStringParameters !== null &&
+        Boolean(queryStringParameters.resend)
+      ) {
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          Username: email,
+        };
+        await service.resendConfirmationCode(params).promise();
+      } else {
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          Password: password,
+          Username: email,
+        };
+        const newUser = await service.signUp(params).promise();
+        returnObject = { ...newUser };
+      }
+
       break;
     case "PATCH /sign-up":
       const { username, confirmationCode } = JSON.parse(body);
