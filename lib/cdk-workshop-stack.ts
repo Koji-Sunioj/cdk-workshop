@@ -2,6 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 //s3 and cloud front deployment imports
 import { Bucket, BucketAccessControl } from "aws-cdk-lib/aws-s3";
@@ -114,8 +115,26 @@ export class CdkWorkshopStack extends cdk.Stack {
       handler: "signup.handler",
       environment: {
         USER_POOL_CLIENT: userPoolClient.userPoolClientId,
+        USER_POOL_ID: userPool.userPoolId,
       },
     });
+
+    signUp.role?.attachInlinePolicy(
+      new iam.Policy(this, "userpool-policy", {
+        statements: [
+          new iam.PolicyStatement({
+            actions: [
+              "cognito-idp:AdminGetUser",
+              "cognito-idp:AdminDeleteUser",
+            ],
+            resources: [
+              userPool.userPoolArn,
+              `arn:aws:cognito-idp:${userPool.stack.region}:${userPool.stack.account}:userpool/${userPoolClient.userPoolClientId}`,
+            ],
+          }),
+        ],
+      })
+    );
 
     //api gateway constructor
     const signUpapi = new apigw.LambdaRestApi(this, "SignUpEndpoint", {

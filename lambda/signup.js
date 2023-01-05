@@ -2,11 +2,8 @@ const AWS = require("aws-sdk");
 const service = new AWS.CognitoIdentityServiceProvider();
 
 exports.handler = async function (event) {
-  console.log("hit");
   const { httpMethod, resource, body } = event;
   const routeKey = `${httpMethod} ${resource}`;
-
-  console.log(routeKey);
 
   let params, password, email, userName;
   let returnObject = {};
@@ -50,7 +47,29 @@ exports.handler = async function (event) {
           Password: password,
           Username: email,
         };
-        const newUser = await service.signUp(params).promise();
+        let newUser;
+        try {
+          newUser = await service.signUp(params).promise();
+        } catch (e) {
+          const cancelIt = {
+            UserPoolId: process.env.USER_POOL_ID,
+            Username: email,
+          };
+
+          const { UserAttributes } = await service
+            .adminGetUser(cancelIt)
+            .promise();
+          const filtered = UserAttributes.find(
+            (entry) => entry.Name === "email_verified"
+          );
+
+          if (filtered.Value === "false") {
+            console.log("deleting");
+            await service.adminDeleteUser(cancelIt).promise();
+            newUser = await service.signUp(params).promise();
+          }
+        }
+
         returnObject = { ...newUser };
       }
 

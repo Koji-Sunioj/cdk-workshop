@@ -1,49 +1,49 @@
-import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
+import Button from "react-bootstrap/Button";
+import Container from "react-bootstrap/Container";
 
-import { useState, useContext } from "react";
 import { globalContext } from "../App";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  authenticate,
+  signUp,
+  confirmSignUp,
+  resendConfirmation,
+} from "../utils/api";
 
 function SignUp() {
-  const [login, setLogin] = useContext(globalContext);
   const navigate = useNavigate();
-
-  const signUpUrl =
-    "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/sign-up";
-  const signInUrl =
-    "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/auth/";
-
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [login, setLogin] = useContext(globalContext);
 
   const confirmUser = async (event) => {
-    console.log("confirmed");
+    setLoading(true);
     event.preventDefault();
     const {
       confirmation: { value: confirmationCode },
     } = event.currentTarget;
 
-    const statusCode = await fetch(signUpUrl, {
-      method: "PATCH",
-      body: JSON.stringify({ ...user, confirmationCode: confirmationCode }),
-    }).then((response) => response.status);
-
+    const statusCode = await confirmSignUp({
+      ...user,
+      confirmationCode: confirmationCode,
+    });
     statusCode === 200 &&
       (async () => {
         const { username, password } = user;
-        const token = await fetch(signInUrl, {
-          method: "POST",
-          body: JSON.stringify({
-            userName: username,
-            password: password,
-          }),
-        }).then((response) => response.json());
+        const token = await authenticate({
+          userName: username,
+          password: password,
+        });
+        localStorage.setItem("userName", username);
+        localStorage.setItem("AccessToken", token.AccessToken);
 
         setLogin({ userName: username, ...token });
         navigate("/");
+        setLoading(false);
       })();
   };
 
@@ -63,25 +63,26 @@ function SignUp() {
       confirmPassword < 8;
 
     if (isInValid) {
-      alert("hey");
+      alert("passwords are not the same, or do not meet requirements");
     } else {
-      await fetch(signUpUrl, {
-        method: "POST",
-        body: JSON.stringify({ email: email, password: password }),
-      }).then((response) => response.json());
-      setUser({ username: email, password: password });
-      Array.from(document.querySelectorAll("input")).forEach(
-        (input) => (input.value = "")
-      );
+      setLoading(true);
+      const statusCode = await signUp({ email: email, password: password });
+      statusCode === 200 &&
+        (async () => {
+          setUser({ username: email, password: password });
+          Array.from(document.querySelectorAll("input")).forEach(
+            (input) => (input.value = "")
+          );
+          setLoading(false);
+        })();
     }
   };
 
-  const resendConfirmation = async () => {
+  const resend = async () => {
+    setLoading(true);
     const { username } = user;
-    await fetch(signUpUrl + "?resend=true", {
-      method: "POST",
-      body: JSON.stringify({ email: username }),
-    }).then((response) => response.json());
+    await resendConfirmation(username);
+    setLoading(false);
   };
 
   return (
@@ -100,6 +101,7 @@ function SignUp() {
                       placeholder="Enter email"
                       name="email"
                       autoComplete="on"
+                      disabled={loading}
                     />
                   </Form.Group>
                   <Form.Group className="mb-3">
@@ -108,6 +110,7 @@ function SignUp() {
                       placeholder="Password"
                       name="password"
                       autoComplete="on"
+                      disabled={loading}
                     />
                   </Form.Group>
                   <Form.Group className="mb-3">
@@ -116,12 +119,22 @@ function SignUp() {
                       placeholder="confirm password"
                       name="confirmPassword"
                       autoComplete="on"
+                      disabled={loading}
                     />
+                    <Form.Text className="text-muted">
+                      Password should be over seven characters and have at least
+                      one uppercase letter
+                    </Form.Text>
                   </Form.Group>
-                  <Button variant="primary" type="submit">
+
+                  <Button variant="primary" type="submit" disabled={loading}>
                     Submit
                   </Button>
                 </Form>
+                <br />
+                <Link to="waiting">
+                  Have a confirmation code already? Click here
+                </Link>
               </>
             ) : (
               <>
@@ -132,17 +145,18 @@ function SignUp() {
                     <Form.Control
                       placeholder="confirmation code"
                       name="confirmation"
-                      defaultValue={""}
                       autoComplete="off"
+                      disabled={loading}
                     />
                   </Form.Group>
-                  <Button variant="primary" type="submit">
+                  <Button variant="primary" type="submit" disabled={loading}>
                     Submit
                   </Button>
                   <Button
+                    disabled={loading}
                     variant="primary"
                     style={{ marginLeft: "10px" }}
-                    onClick={resendConfirmation}
+                    onClick={resend}
                   >
                     Resend Code
                   </Button>
