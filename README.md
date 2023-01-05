@@ -1,3 +1,12 @@
+# Notes from Koji
+
+Small project to learn the basics of the AWS CDK. Features include:
+
+- Running a build to an S3 bucket with Cloudflare distribution, which updates when build is updated
+- Handling multiple Api Gateway paths, methods and request patterns
+- Configuring authentication to client via lambda / api gateway, using permissions, environment variables and AWS SDK to perform actions
+- Performing Crud operations via lambda / api gateway to and from Dynamodb and client
+
 # Welcome to your CDK TypeScript project
 
 You should explore the contents of this project. It demonstrates a CDK app with an instance of a stack (`CdkWorkshopStack`)
