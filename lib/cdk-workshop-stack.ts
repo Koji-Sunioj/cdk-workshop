@@ -1,27 +1,32 @@
 import * as cdk from "aws-cdk-lib";
+import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-import * as iam from "aws-cdk-lib/aws-iam";
 
 //s3 and cloud front deployment imports
-import { Bucket, BucketAccessControl } from "aws-cdk-lib/aws-s3";
-import { BucketDeployment, Source } from "aws-cdk-lib/aws-s3-deployment";
 import * as path from "path";
-import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
-import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
-import { CacheControl } from "aws-cdk-lib/aws-s3-deployment";
-
+import {
+  CacheControl,
+  BucketDeployment,
+  Source,
+} from "aws-cdk-lib/aws-s3-deployment";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import { Bucket, BucketAccessControl } from "aws-cdk-lib/aws-s3";
+import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
+import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 export class CdkWorkshopStack extends cdk.Stack {
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
+    /* self sign up allows user to register on their own. autoverify is for 
+    confirmation code. sign in alias is when email used as username. custom 
+    password policy */
     const userPool = new cognito.UserPool(this, "UserPool", {
-      selfSignUpEnabled: true, // Allow users to sign up
-      autoVerify: { email: true }, // Verify email addresses by sending a verification code
-      signInAliases: { email: true }, // Set email as an alias
+      selfSignUpEnabled: true,
+      autoVerify: { email: true },
+      signInAliases: { email: true },
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -31,12 +36,14 @@ export class CdkWorkshopStack extends cdk.Stack {
       },
     });
 
+    /* need to specify the type of user registration, in our case is username 
+   and password. user pool client acts on behalf of user pool in app */
     const userPoolClient = new cognito.UserPoolClient(this, "UserPoolClient", {
       authFlows: {
         userPassword: true,
       },
       userPool,
-      generateSecret: false, // Don't need to generate secret for web app running on browsers
+      generateSecret: false,
     });
 
     //s3 and cloud front deployment constructors
@@ -44,13 +51,14 @@ export class CdkWorkshopStack extends cdk.Stack {
       accessControl: BucketAccessControl.PRIVATE,
     });
 
+    //allows cloud front to access s3 bucket
     const originAccessIdentity = new OriginAccessIdentity(
       this,
       "OriginAccessIdentity"
     );
-
     bucket.grantRead(originAccessIdentity);
 
+    //the file for cloudfront to serve in s3. need error for react routing
     const distribution = new Distribution(this, "Distribution", {
       defaultRootObject: "index.html",
       defaultBehavior: {
@@ -65,6 +73,7 @@ export class CdkWorkshopStack extends cdk.Stack {
       ],
     });
 
+    // cache control and distribution pat needed when updating the build folder
     new BucketDeployment(this, "BucketDeployment", {
       sources: [
         Source.asset(path.resolve(__dirname, "../website/tests3/build")),
@@ -109,6 +118,7 @@ export class CdkWorkshopStack extends cdk.Stack {
     album.addMethod("DELETE");
     album.addMethod("PATCH");
 
+    // user pool client needed for user signups, pool id for admin actions
     const signUp = new lambda.Function(this, "SignUpHandler", {
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset("lambda"),
@@ -119,6 +129,8 @@ export class CdkWorkshopStack extends cdk.Stack {
       },
     });
 
+    /* this is needed for admin actions in aws-sdk in cognito pool. arn needed 
+    for both user pool and client */
     signUp.role?.attachInlinePolicy(
       new iam.Policy(this, "userpool-policy", {
         statements: [
@@ -145,11 +157,17 @@ export class CdkWorkshopStack extends cdk.Stack {
       },
     });
 
+    //sign-in
     const auth = signUpapi.root.addResource("auth");
     auth.addMethod("POST");
-    //creating paths and methods for api
+
+    //new user and confirmation email
     const newAuth = signUpapi.root.addResource("sign-up");
     newAuth.addMethod("POST");
     newAuth.addMethod("PATCH");
+
+    //resend confirmation
+    const resendConf = newAuth.addResource("{email}");
+    resendConf.addMethod("GET");
   }
 }

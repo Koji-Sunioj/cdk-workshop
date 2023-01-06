@@ -6,7 +6,7 @@ import Container from "react-bootstrap/Container";
 
 import { globalContext } from "../App";
 import { useState, useContext } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   authenticate,
   signUp,
@@ -67,14 +67,21 @@ function SignUp() {
     } else {
       setLoading(true);
       const statusCode = await signUp({ email: email, password: password });
-      statusCode === 200 &&
-        (async () => {
+      switch (statusCode) {
+        case 200:
           setUser({ username: email, password: password });
           Array.from(document.querySelectorAll("input")).forEach(
             (input) => (input.value = "")
           );
-          setLoading(false);
-        })();
+
+          break;
+        case 409:
+          alert("user already exists");
+          break;
+        default:
+          alert("there was an error");
+      }
+      setLoading(false);
     }
   };
 
@@ -131,10 +138,6 @@ function SignUp() {
                     Submit
                   </Button>
                 </Form>
-                <br />
-                <Link to="waiting">
-                  Have a confirmation code already? Click here
-                </Link>
               </>
             ) : (
               <>

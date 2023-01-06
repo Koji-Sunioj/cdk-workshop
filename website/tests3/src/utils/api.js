@@ -25,10 +25,7 @@ export const confirmSignUp = async (emailConf) => {
 };
 
 export const resendConfirmation = async (username) => {
-  await fetch(authUrl + "sign-up?resend=true", {
-    method: "POST",
-    body: JSON.stringify({ email: username }),
-  });
+  await fetch(authUrl + "sign-up/" + username);
 };
 
 // need:

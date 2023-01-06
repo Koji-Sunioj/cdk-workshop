@@ -2,18 +2,19 @@ const AWS = require("aws-sdk");
 const service = new AWS.CognitoIdentityServiceProvider();
 
 exports.handler = async function (event) {
-  const { httpMethod, resource, body } = event;
+  const { httpMethod, resource, body, pathParameters } = event;
   const routeKey = `${httpMethod} ${resource}`;
 
   let params, password, email, userName;
   let returnObject = {};
+  let statusCode = 200;
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
       "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
     "Access-Control-Allow-Methods": "GET,POST,DELETE,PATCH",
   };
-
+  console.log(routeKey);
   switch (routeKey) {
     case "POST /auth":
       ({ userName, password } = JSON.parse(body));
@@ -29,50 +30,48 @@ exports.handler = async function (event) {
       returnObject = { AccessToken: AccessToken };
       break;
 
+    case "GET /sign-up/{email}":
+      ({ email } = pathParameters);
+      params = {
+        ClientId: process.env.USER_POOL_CLIENT,
+        Username: email,
+      };
+      await service.resendConfirmationCode(params).promise();
+      break;
     case "POST /sign-up":
       ({ email, password } = JSON.parse(body));
-      const { queryStringParameters } = event;
-      if (
-        queryStringParameters !== null &&
-        Boolean(queryStringParameters.resend)
-      ) {
-        params = {
-          ClientId: process.env.USER_POOL_CLIENT,
+      params = {
+        ClientId: process.env.USER_POOL_CLIENT,
+        Password: password,
+        Username: email,
+      };
+      let newUser;
+      try {
+        newUser = await service.signUp(params).promise();
+      } catch (e) {
+        const findExistingUser = {
+          UserPoolId: process.env.USER_POOL_ID,
           Username: email,
         };
-        await service.resendConfirmationCode(params).promise();
-      } else {
-        params = {
-          ClientId: process.env.USER_POOL_CLIENT,
-          Password: password,
-          Username: email,
-        };
-        let newUser;
-        try {
-          newUser = await service.signUp(params).promise();
-        } catch (e) {
-          const cancelIt = {
-            UserPoolId: process.env.USER_POOL_ID,
-            Username: email,
-          };
 
-          const { UserAttributes } = await service
-            .adminGetUser(cancelIt)
-            .promise();
-          const filtered = UserAttributes.find(
-            (entry) => entry.Name === "email_verified"
-          );
+        const { UserAttributes } = await service
+          .adminGetUser(findExistingUser)
+          .promise();
+        const userConfirmed = UserAttributes.find(
+          (entry) => entry.Name === "email_verified"
+        ).Value;
 
-          if (filtered.Value === "false") {
-            console.log("deleting");
-            await service.adminDeleteUser(cancelIt).promise();
+        switch (userConfirmed) {
+          case "false":
+            await service.adminDeleteUser(findExistingUser).promise();
             newUser = await service.signUp(params).promise();
-          }
+            break;
+          default:
+            newUser = { message: "user already exists" };
+            statusCode = 409;
         }
-
-        returnObject = { ...newUser };
       }
-
+      returnObject = { ...newUser };
       break;
     case "PATCH /sign-up":
       const { username, confirmationCode } = JSON.parse(body);
@@ -83,10 +82,14 @@ exports.handler = async function (event) {
       };
       await service.confirmSignUp(params).promise();
       returnObject = { message: "successfully created" };
+      break;
+    default:
+      statusCode = 404;
+      returnObject = { message: "no matching resource" };
   }
 
   return {
-    statusCode: 200,
+    statusCode: statusCode,
     headers: headers,
     body: JSON.stringify(returnObject),
   };
