@@ -6,6 +6,7 @@ import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import ForgotPw from "./pages/ForgotPw";
 import { createContext, useState } from "react";
 
 export const globalContext = createContext();
@@ -30,6 +31,7 @@ function App() {
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Prices />} />
           <Route path="/" element={<HomePage />} />
+          <Route path="/forgot-password" element={<ForgotPw />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

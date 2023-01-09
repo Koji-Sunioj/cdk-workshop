@@ -160,6 +160,9 @@ export class CdkWorkshopStack extends cdk.Stack {
     //sign-in
     const auth = signUpapi.root.addResource("auth");
     auth.addMethod("POST");
+    const handlePw = auth.addResource("{email}");
+    handlePw.addMethod("PATCH");
+    handlePw.addMethod("HEAD");
 
     //new user and confirmation email
     const newAuth = signUpapi.root.addResource("sign-up");
@@ -168,6 +171,6 @@ export class CdkWorkshopStack extends cdk.Stack {
 
     //resend confirmation
     const resendConf = newAuth.addResource("{email}");
-    resendConf.addMethod("GET");
+    resendConf.addMethod("HEAD");
   }
 }

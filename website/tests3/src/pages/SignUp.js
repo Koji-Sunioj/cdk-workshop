@@ -26,22 +26,22 @@ function SignUp() {
     const {
       confirmation: { value: confirmationCode },
     } = event.currentTarget;
-
+    console.log(user);
     const statusCode = await confirmSignUp({
       ...user,
       confirmationCode: confirmationCode,
     });
     statusCode === 200 &&
       (async () => {
-        const { username, password } = user;
+        const { userName, password } = user;
         const token = await authenticate({
-          userName: username,
+          userName: userName,
           password: password,
         });
-        localStorage.setItem("userName", username);
+        localStorage.setItem("userName", userName);
         localStorage.setItem("AccessToken", token.AccessToken);
 
-        setLogin({ userName: username, ...token });
+        setLogin({ userName: userName, ...token });
         navigate("/");
         setLoading(false);
       })();
@@ -69,7 +69,7 @@ function SignUp() {
       const statusCode = await signUp({ email: email, password: password });
       switch (statusCode) {
         case 200:
-          setUser({ username: email, password: password });
+          setUser({ userName: email, password: password });
           Array.from(document.querySelectorAll("input")).forEach(
             (input) => (input.value = "")
           );
@@ -87,8 +87,8 @@ function SignUp() {
 
   const resend = async () => {
     setLoading(true);
-    const { username } = user;
-    await resendConfirmation(username);
+    const { userName } = user;
+    await resendConfirmation(userName);
     setLoading(false);
   };
 

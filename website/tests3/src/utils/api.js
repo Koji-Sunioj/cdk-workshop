@@ -24,8 +24,30 @@ export const confirmSignUp = async (emailConf) => {
   return statusCode;
 };
 
-export const resendConfirmation = async (username) => {
-  await fetch(authUrl + "sign-up/" + username);
+export const resendConfirmation = async (userName) => {
+  await fetch(authUrl + "sign-up/" + userName, { method: "HEAD" });
+};
+
+export const forgotPassword = async (userName) => {
+  const statusCode = await fetch(authUrl + "auth/" + userName, {
+    method: "HEAD",
+  }).then((response) => response.status);
+  return statusCode;
+};
+
+export const confirmForgotResetPassword = async (emailPwdConf) => {
+  const { userName, passWord, confirmationCode } = emailPwdConf;
+  const statusCode = await fetch(
+    authUrl + "auth/" + userName + "?confirmForgot=true",
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        password: passWord,
+        confirmationCode: confirmationCode,
+      }),
+    }
+  ).then((response) => response.status);
+  return statusCode;
 };
 
 // need:

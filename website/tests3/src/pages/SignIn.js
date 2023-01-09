@@ -34,6 +34,7 @@ function SignIn() {
         })();
     } catch {
       alert("there was an error");
+      setLoading(false);
     }
   };
 
@@ -50,6 +51,7 @@ function SignIn() {
                   placeholder="Enter email"
                   name="email"
                   autoComplete="on"
+                  disabled={loading}
                 />
               </Form.Group>
               <Form.Group className="mb-3">
@@ -58,14 +60,25 @@ function SignIn() {
                   placeholder="Password"
                   name="password"
                   autoComplete="on"
+                  disabled={loading}
                 />
               </Form.Group>
               <Button variant="primary" type="submit" disabled={loading}>
                 Submit
               </Button>
             </Form>
-            <br />
-            <Link to={"/sign-up"}>Don't have an account yet? Sign up!</Link>
+            <div
+              style={{
+                paddingTop: "10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
+              }}
+            >
+              <Link to={"/sign-up"}>Don't have an account yet? Sign up!</Link>
+
+              <Link to={"/forgot-password"}>Forgot password?</Link>
+            </div>
           </Col>
         </Row>
       </Container>

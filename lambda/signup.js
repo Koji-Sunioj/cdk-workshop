@@ -2,17 +2,18 @@ const AWS = require("aws-sdk");
 const service = new AWS.CognitoIdentityServiceProvider();
 
 exports.handler = async function (event) {
-  const { httpMethod, resource, body, pathParameters } = event;
+  const { httpMethod, resource, body, pathParameters, queryStringParameters } =
+    event;
   const routeKey = `${httpMethod} ${resource}`;
 
-  let params, password, email, userName;
+  let params, password, email, userName, confirmationCode;
   let returnObject = {};
   let statusCode = 200;
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers":
       "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-    "Access-Control-Allow-Methods": "GET,POST,DELETE,PATCH",
+    "Access-Control-Allow-Methods": "GET,POST,DELETE,PATCH,HEAD",
   };
   console.log(routeKey);
   switch (routeKey) {
@@ -29,8 +30,30 @@ exports.handler = async function (event) {
 
       returnObject = { AccessToken: AccessToken };
       break;
+    case "HEAD /auth/{email}":
+      ({ email } = pathParameters);
+      params = {
+        ClientId: process.env.USER_POOL_CLIENT,
+        Username: email,
+      };
+      await service.forgotPassword(params).promise();
+      break;
+    case "PATCH /auth/{email}":
+      ({ email } = pathParameters);
+      const { confirmForgot } = queryStringParameters;
+      ({ confirmationCode, password } = JSON.parse(body));
+      if (Boolean(confirmForgot)) {
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          ConfirmationCode: confirmationCode,
+          Password: password,
+          Username: email,
+        };
+        await service.confirmForgotPassword(params).promise();
+      }
+      break;
 
-    case "GET /sign-up/{email}":
+    case "HEAD /sign-up/{email}":
       ({ email } = pathParameters);
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
@@ -74,10 +97,10 @@ exports.handler = async function (event) {
       returnObject = { ...newUser };
       break;
     case "PATCH /sign-up":
-      const { username, confirmationCode } = JSON.parse(body);
+      ({ userName, confirmationCode } = JSON.parse(body));
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
-        Username: username,
+        Username: userName,
         ConfirmationCode: confirmationCode,
       };
       await service.confirmSignUp(params).promise();
