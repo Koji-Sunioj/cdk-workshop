@@ -1,5 +1,6 @@
 const AWS = require("aws-sdk");
 const service = new AWS.CognitoIdentityServiceProvider();
+const { headers } = require("./utils/headers.js");
 
 exports.handler = async function (event) {
   const { httpMethod, resource, body, pathParameters, queryStringParameters } =
@@ -9,15 +10,10 @@ exports.handler = async function (event) {
   let params, password, email, userName, confirmationCode;
   let returnObject = {};
   let statusCode = 200;
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers":
-      "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-    "Access-Control-Allow-Methods": "GET,POST,DELETE,PATCH,HEAD",
-  };
-  console.log(routeKey);
+
   switch (routeKey) {
     case "POST /auth":
+      //sign up existing user
       ({ userName, password } = JSON.parse(body));
       params = {
         AuthFlow: "USER_PASSWORD_AUTH",
@@ -27,10 +23,10 @@ exports.handler = async function (event) {
       const {
         AuthenticationResult: { AccessToken },
       } = await service.initiateAuth(params).promise();
-
       returnObject = { AccessToken: AccessToken };
       break;
     case "HEAD /auth/{email}":
+      //send reset code for existing user
       ({ email } = pathParameters);
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
@@ -42,8 +38,8 @@ exports.handler = async function (event) {
       ({ email } = pathParameters);
       const { task } = queryStringParameters;
       ({ confirmationCode, password } = JSON.parse(body));
-      console.log(password);
       switch (task) {
+        //existing user forgot password
         case "forgot":
           params = {
             ClientId: process.env.USER_POOL_CLIENT,
@@ -54,22 +50,21 @@ exports.handler = async function (event) {
           await service.confirmForgotPassword(params).promise();
           break;
         case "reset":
+          //existing user needs reset password
           params = {
             Password: password,
             UserPoolId: process.env.USER_POOL_ID,
             Username: email,
             Permanent: true,
           };
-          console.log(params);
-          const something = await service
-            .adminSetUserPassword(params)
-            .promise();
-          returnObject = { ...something };
+          await service.adminSetUserPassword(params).promise();
           break;
       }
+      returnObject = { message: "successfully updated" };
       break;
 
     case "HEAD /sign-up/{email}":
+      //resend confirmation for new user
       ({ email } = pathParameters);
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
@@ -86,20 +81,20 @@ exports.handler = async function (event) {
       };
       let newUser;
       try {
+        //try to create a new user
         newUser = await service.signUp(params).promise();
       } catch (e) {
+        //if already exists and not confirmed, delete old entry and sign up again
         const findExistingUser = {
           UserPoolId: process.env.USER_POOL_ID,
           Username: email,
         };
-
         const { UserAttributes } = await service
           .adminGetUser(findExistingUser)
           .promise();
         const userConfirmed = UserAttributes.find(
           (entry) => entry.Name === "email_verified"
         ).Value;
-
         switch (userConfirmed) {
           case "false":
             await service.adminDeleteUser(findExistingUser).promise();
@@ -110,7 +105,7 @@ exports.handler = async function (event) {
             statusCode = 409;
         }
       }
-      returnObject = { ...newUser };
+      returnObject = { ...newUser, message: "user created" };
       break;
     case "PATCH /sign-up":
       ({ userName, confirmationCode } = JSON.parse(body));

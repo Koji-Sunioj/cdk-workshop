@@ -1,18 +1,13 @@
 const AWS = require("aws-sdk");
 const docClient = new AWS.DynamoDB.DocumentClient({ region: "eu-north-1" });
+const { headers } = require("./utils/headers.js");
 
 exports.handler = async function (event, context) {
   const { httpMethod, resource, pathParameters, body } = event;
   const routeKey = `${httpMethod} ${resource}`;
 
   let returnObject = {};
-  const headers = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers":
-      "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-    "Access-Control-Allow-Methods": "GET,POST,DELETE,PATCH",
-  };
-
+  let title, released, artist;
   let params = {
     TableName: process.env.ALBUM_TABLE_NAME,
   };
