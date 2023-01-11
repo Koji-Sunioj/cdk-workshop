@@ -1,18 +1,25 @@
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
+import Alert from "react-bootstrap/Alert";
 import Container from "react-bootstrap/Container";
 
 import { globalContext } from "../App";
-import { authenticate } from "../utils/api";
 import { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
+import { authenticate } from "../utils/api";
+import PwInputs from "../components/PwInputs";
+
 function SignIn() {
-  const [loading, setLoading] = useState(false);
-  const [, setLogin] = useContext(globalContext);
+  const pointer = {
+    success: "successfully logged in",
+    danger: "mismatch password, or user doesn't exist",
+  };
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [apiState, setApiState] = useState(null);
+  const [, setLogin] = useContext(globalContext);
 
   const signIn = async (event) => {
     setLoading(true);
@@ -23,18 +30,20 @@ function SignIn() {
     } = event.currentTarget;
     try {
       const token = await authenticate({ userName: email, password: password });
-
       token.hasOwnProperty("AccessToken") &&
         (() => {
           setLogin({ userName: email, ...token });
+          setApiState("success");
           localStorage.setItem("userName", email);
           localStorage.setItem("AccessToken", token.AccessToken);
-          navigate("/");
-          setLoading(false);
+          setTimeout(() => {
+            navigate("/");
+            setLoading(false);
+          }, 1500);
         })();
     } catch {
-      alert("there was an error");
       setLoading(false);
+      setApiState("danger");
     }
   };
 
@@ -44,29 +53,17 @@ function SignIn() {
         <Row>
           <Col lg="5">
             <h2>Sign In</h2>
-            <Form onSubmit={signIn}>
+
+            <PwInputs handler={signIn} loading={loading} confirmPw={false}>
               <Form.Group className="mb-3">
                 <Form.Control
                   type="email"
                   placeholder="Enter email"
                   name="email"
                   autoComplete="on"
-                  disabled={loading}
                 />
               </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Control
-                  type="password"
-                  placeholder="Password"
-                  name="password"
-                  autoComplete="on"
-                  disabled={loading}
-                />
-              </Form.Group>
-              <Button variant="primary" type="submit" disabled={loading}>
-                Submit
-              </Button>
-            </Form>
+            </PwInputs>
             <div
               style={{
                 paddingTop: "10px",
@@ -76,9 +73,17 @@ function SignIn() {
               }}
             >
               <Link to={"/sign-up"}>Don't have an account yet? Sign up!</Link>
-
               <Link to={"/forgot-password"}>Forgot password?</Link>
             </div>
+            <br />
+            <Alert
+              show={apiState}
+              variant={apiState}
+              onClose={() => setApiState(null)}
+              dismissible
+            >
+              {pointer[apiState]}
+            </Alert>
           </Col>
         </Row>
       </Container>

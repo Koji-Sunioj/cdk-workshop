@@ -1,12 +1,14 @@
-import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/esm/Button";
-import Form from "react-bootstrap/Form";
+import Container from "react-bootstrap/Container";
+
 import { globalContext } from "../App";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { resetPassword } from "../utils/api";
+import PwInputs from "../components/PwInputs";
 
 function Account() {
   const navigate = useNavigate();
@@ -56,34 +58,7 @@ function Account() {
             {resetFlow ? (
               <>
                 <h2>Reset password for {userName}</h2>
-                <Form onSubmit={initiateReset}>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="Password"
-                      name="password"
-                      autoComplete="on"
-                      disabled={loading}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="confirm password"
-                      name="confirmPassword"
-                      autoComplete="on"
-                      disabled={loading}
-                    />
-                    <Form.Text className="text-muted">
-                      Password should be over seven characters and have at least
-                      one uppercase letter
-                    </Form.Text>
-                  </Form.Group>
-
-                  <Button variant="primary" type="submit" disabled={loading}>
-                    Submit
-                  </Button>
-                </Form>
+                <PwInputs handler={initiateReset} loading={loading} />
               </>
             ) : (
               <>

@@ -7,12 +7,14 @@ import Container from "react-bootstrap/Container";
 import { globalContext } from "../App";
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   authenticate,
   signUp,
   confirmSignUp,
   resendConfirmation,
 } from "../utils/api";
+import PwInputs from "../components/PwInputs";
 
 function SignUp() {
   const navigate = useNavigate();
@@ -101,43 +103,16 @@ function SignUp() {
             {user === null ? (
               <>
                 <h2>Sign Up</h2>
-                <Form onSubmit={initialSignUp}>
+                <PwInputs handler={initialSignUp} loading={loading}>
                   <Form.Group className="mb-3">
                     <Form.Control
                       type="email"
                       placeholder="Enter email"
                       name="email"
                       autoComplete="on"
-                      disabled={loading}
                     />
                   </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="Password"
-                      name="password"
-                      autoComplete="on"
-                      disabled={loading}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="confirm password"
-                      name="confirmPassword"
-                      autoComplete="on"
-                      disabled={loading}
-                    />
-                    <Form.Text className="text-muted">
-                      Password should be over seven characters and have at least
-                      one uppercase letter
-                    </Form.Text>
-                  </Form.Group>
-
-                  <Button variant="primary" type="submit" disabled={loading}>
-                    Submit
-                  </Button>
-                </Form>
+                </PwInputs>
               </>
             ) : (
               <>

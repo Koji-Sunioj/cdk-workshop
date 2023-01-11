@@ -108,6 +108,7 @@ exports.handler = async function (event) {
       returnObject = { ...newUser, message: "user created" };
       break;
     case "PATCH /sign-up":
+      //register new user with confirmation code
       ({ userName, confirmationCode } = JSON.parse(body));
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
@@ -118,6 +119,7 @@ exports.handler = async function (event) {
       returnObject = { message: "successfully created" };
       break;
     default:
+      //no matching request
       statusCode = 404;
       returnObject = { message: "no matching resource" };
   }

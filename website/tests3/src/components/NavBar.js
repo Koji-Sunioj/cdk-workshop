@@ -1,10 +1,10 @@
-import Container from "react-bootstrap/Container";
-import { Link } from "react-router-dom";
-import Navbar from "react-bootstrap/Navbar";
 import Nav from "react-bootstrap/Nav";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { globalContext } from "../App";
+import Navbar from "react-bootstrap/Navbar";
+import Container from "react-bootstrap/Container";
+
 import { useContext } from "react";
+import { globalContext } from "../App";
+import { Link } from "react-router-dom";
 
 function NavBar() {
   const [login] = useContext(globalContext);

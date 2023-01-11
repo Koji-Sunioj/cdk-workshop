@@ -1,11 +1,14 @@
-import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/esm/Button";
-import { forgotPassword, confirmForgotResetPassword } from "../utils/api";
+import Container from "react-bootstrap/Container";
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+import PwInputs from "../components/PwInputs";
+import { forgotPassword, confirmForgotResetPassword } from "../utils/api";
 
 function ForgotPw() {
   const navigate = useNavigate();
@@ -68,43 +71,16 @@ function ForgotPw() {
             {pwFlow ? (
               <>
                 <h2>Confirm new password</h2>
-                <Form onSubmit={sendNewPw2}>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="Password"
-                      name="password"
-                      autoComplete="on"
-                      disabled={loading}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Control
-                      type="password"
-                      placeholder="confirm password"
-                      name="confirmPassword"
-                      autoComplete="on"
-                      disabled={loading}
-                    />
-
-                    <Form.Text className="text-muted">
-                      Password should be over seven characters and have at least
-                      one uppercase letter
-                    </Form.Text>
-                  </Form.Group>
+                <PwInputs handler={sendNewPw2} loading={loading}>
                   <Form.Group className="mb-3">
                     <Form.Control
                       type="text"
                       placeholder="confirmation code"
                       name="confirmation"
                       autoComplete="off"
-                      disabled={loading}
                     />
                   </Form.Group>
-                  <Button variant="primary" type="submit" disabled={loading}>
-                    Submit
-                  </Button>
-                </Form>
+                </PwInputs>
               </>
             ) : (
               <>
