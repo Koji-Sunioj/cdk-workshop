@@ -7,7 +7,7 @@ import { globalContext } from "../App";
 import { useContext } from "react";
 
 function NavBar() {
-  const [login, setLogin] = useContext(globalContext);
+  const [login] = useContext(globalContext);
   return (
     <>
       <Navbar bg="dark" variant="dark">
@@ -23,15 +23,8 @@ function NavBar() {
               Pricing
             </Nav.Link>
             {login !== null ? (
-              <Nav.Link
-                to="/sign-out"
-                onClick={() => {
-                  setLogin(null);
-                  localStorage.removeItem("userName");
-                  localStorage.removeItem("AccessToken");
-                }}
-              >
-                Sign Out
+              <Nav.Link as={Link} to="/account">
+                My Account
               </Nav.Link>
             ) : (
               <Nav.Link as={Link} to="/sign-in">

@@ -1,10 +1,8 @@
 {
   "app": "npx ts-node --prefer-ts-exts bin/cdk-workshop.ts",
   "watch": {
-    "include": [
-      "**"
-    ],
     "exclude": [
+      "website/index.html",
       "README.md",
       "cdk*.json",
       "**/*.d.ts",
@@ -13,6 +11,11 @@
       "yarn.lock",
       "node_modules",
       "test"
+    ],
+    "include": [
+      "**",
+      "!website",
+      "website/tests3/build"
     ]
   },
   "context": {
@@ -37,3 +40,4 @@
     "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": true
   }
 }
+

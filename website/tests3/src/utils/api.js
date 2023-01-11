@@ -1,7 +1,11 @@
-const authUrl = "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/";
+import apiUrls from "../apis.json";
+
+const { AuthUrl, SignUpUrl } = apiUrls.CdkWorkshopStack;
+
+//const authUrl = "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/";
 
 export const authenticate = async (login) => {
-  const token = await fetch(authUrl + "auth", {
+  const token = await fetch(AuthUrl, {
     method: "POST",
     body: JSON.stringify(login),
   }).then((response) => response.json());
@@ -9,7 +13,7 @@ export const authenticate = async (login) => {
 };
 
 export const signUp = async (emailPwd) => {
-  const statusCode = await fetch(authUrl + "sign-up", {
+  const statusCode = await fetch(SignUpUrl, {
     method: "POST",
     body: JSON.stringify(emailPwd),
   }).then((response) => response.status);
@@ -17,7 +21,7 @@ export const signUp = async (emailPwd) => {
 };
 
 export const confirmSignUp = async (emailConf) => {
-  const statusCode = await fetch(authUrl + "sign-up", {
+  const statusCode = await fetch(SignUpUrl, {
     method: "PATCH",
     body: JSON.stringify(emailConf),
   }).then((response) => response.status);
@@ -25,11 +29,11 @@ export const confirmSignUp = async (emailConf) => {
 };
 
 export const resendConfirmation = async (userName) => {
-  await fetch(authUrl + "sign-up/" + userName, { method: "HEAD" });
+  await fetch(SignUpUrl + userName, { method: "HEAD" });
 };
 
 export const forgotPassword = async (userName) => {
-  const statusCode = await fetch(authUrl + "auth/" + userName, {
+  const statusCode = await fetch(AuthUrl + userName, {
     method: "HEAD",
   }).then((response) => response.status);
   return statusCode;
@@ -37,21 +41,23 @@ export const forgotPassword = async (userName) => {
 
 export const confirmForgotResetPassword = async (emailPwdConf) => {
   const { userName, passWord, confirmationCode } = emailPwdConf;
-  const statusCode = await fetch(
-    authUrl + "auth/" + userName + "?confirmForgot=true",
-    {
-      method: "PATCH",
-      body: JSON.stringify({
-        password: passWord,
-        confirmationCode: confirmationCode,
-      }),
-    }
-  ).then((response) => response.status);
+  const statusCode = await fetch(AuthUrl + userName + "?task=forgot", {
+    method: "PATCH",
+    body: JSON.stringify({
+      password: passWord,
+      confirmationCode: confirmationCode,
+    }),
+  }).then((response) => response.status);
   return statusCode;
 };
 
-// need:
-// forgot password
-// ui for waiting for confirmation
-// sign out?
-// reset password
+export const resetPassword = async (emailPwd) => {
+  const { userName, passWord } = emailPwd;
+  const statusCode = await fetch(AuthUrl + userName + "?task=reset", {
+    method: "PATCH",
+    body: JSON.stringify({
+      password: passWord,
+    }),
+  }).then((response) => response.status);
+  return statusCode;
+};

@@ -1,0 +1,8 @@
+{
+  "CdkWorkshopStack": {
+    "SignUpUrl": "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/sign-up/",
+    "SignUpEndpoint50C5A93C": "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/",
+    "Endpoint8024A810": "https://0uw19azc75.execute-api.eu-north-1.amazonaws.com/prod/",
+    "AuthUrl": "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/auth/"
+  }
+}

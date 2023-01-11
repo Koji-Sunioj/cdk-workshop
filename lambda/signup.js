@@ -40,16 +40,32 @@ exports.handler = async function (event) {
       break;
     case "PATCH /auth/{email}":
       ({ email } = pathParameters);
-      const { confirmForgot } = queryStringParameters;
+      const { task } = queryStringParameters;
       ({ confirmationCode, password } = JSON.parse(body));
-      if (Boolean(confirmForgot)) {
-        params = {
-          ClientId: process.env.USER_POOL_CLIENT,
-          ConfirmationCode: confirmationCode,
-          Password: password,
-          Username: email,
-        };
-        await service.confirmForgotPassword(params).promise();
+      console.log(password);
+      switch (task) {
+        case "forgot":
+          params = {
+            ClientId: process.env.USER_POOL_CLIENT,
+            ConfirmationCode: confirmationCode,
+            Password: password,
+            Username: email,
+          };
+          await service.confirmForgotPassword(params).promise();
+          break;
+        case "reset":
+          params = {
+            Password: password,
+            UserPoolId: process.env.USER_POOL_ID,
+            Username: email,
+            Permanent: true,
+          };
+          console.log(params);
+          const something = await service
+            .adminSetUserPassword(params)
+            .promise();
+          returnObject = { ...something };
+          break;
       }
       break;
 

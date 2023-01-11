@@ -6,6 +6,7 @@ import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import Account from "./pages/Account";
 import ForgotPw from "./pages/ForgotPw";
 import { createContext, useState } from "react";
 
@@ -27,6 +28,7 @@ function App() {
         <NavBar />
         <br />
         <Routes>
+          <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Prices />} />

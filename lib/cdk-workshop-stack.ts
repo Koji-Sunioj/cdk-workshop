@@ -17,6 +17,8 @@ import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 export class CdkWorkshopStack extends cdk.Stack {
+  public readonly authEndPoint: cdk.CfnOutput;
+  public readonly signUpEndPoint: cdk.CfnOutput;
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -138,6 +140,7 @@ export class CdkWorkshopStack extends cdk.Stack {
             actions: [
               "cognito-idp:AdminGetUser",
               "cognito-idp:AdminDeleteUser",
+              "cognito-idp:AdminSetUserPassword",
             ],
             resources: [
               userPool.userPoolArn,
@@ -159,6 +162,11 @@ export class CdkWorkshopStack extends cdk.Stack {
 
     //sign-in
     const auth = signUpapi.root.addResource("auth");
+
+    this.authEndPoint = new cdk.CfnOutput(this, "AuthUrl", {
+      value: `${signUpapi.url}${auth.node.id}/`,
+    });
+
     auth.addMethod("POST");
     const handlePw = auth.addResource("{email}");
     handlePw.addMethod("PATCH");
@@ -166,6 +174,11 @@ export class CdkWorkshopStack extends cdk.Stack {
 
     //new user and confirmation email
     const newAuth = signUpapi.root.addResource("sign-up");
+
+    this.signUpEndPoint = new cdk.CfnOutput(this, "SignUpUrl", {
+      value: `${signUpapi.url}${newAuth.node.id}/`,
+    });
+
     newAuth.addMethod("POST");
     newAuth.addMethod("PATCH");
 
