@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState } from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 
 import Prices from "./pages/Prices";
