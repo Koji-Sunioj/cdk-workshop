@@ -168,9 +168,11 @@ export class CdkWorkshopStack extends cdk.Stack {
     });
 
     auth.addMethod("POST");
+
     const handlePw = auth.addResource("{email}");
     handlePw.addMethod("PATCH");
     handlePw.addMethod("HEAD");
+    handlePw.addMethod("GET");
 
     //new user and confirmation email
     const newAuth = signUpapi.root.addResource("sign-up");

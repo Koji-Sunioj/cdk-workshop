@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext, useState, useEffect } from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 
 import Prices from "./pages/Prices";
@@ -11,17 +11,32 @@ import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
 
+import { verifiyToken } from "./utils/api";
+
 export const globalContext = createContext();
 
 function App() {
-  let init = null;
+  const [login, setLogin] = useState(null);
+
   const userName = localStorage.getItem("userName");
   const AccessToken = localStorage.getItem("AccessToken");
+  const shouldChcek =
+    userName !== null && AccessToken !== null && login === null;
 
-  if (userName && AccessToken !== null) {
-    init = { userName: userName, AccessToken: AccessToken };
-  }
-  const [login, setLogin] = useState(init);
+  shouldChcek &&
+    (async () => {
+      const { type } = await verifiyToken({
+        userName: userName,
+        token: AccessToken,
+      });
+
+      if (type === "user") {
+        setLogin({ userName: userName, AccessToken: AccessToken });
+      } else {
+        localStorage.removeItem("userName");
+        localStorage.removeItem("AccessToken");
+      }
+    })();
 
   return (
     <BrowserRouter>

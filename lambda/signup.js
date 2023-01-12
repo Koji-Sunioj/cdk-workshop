@@ -1,10 +1,17 @@
 const AWS = require("aws-sdk");
 const service = new AWS.CognitoIdentityServiceProvider();
-const { headers } = require("./utils/headers.js");
+const { returnHeaders } = require("./utils/headers.js");
+const { verifyToken } = require("./utils/token.js");
 
 exports.handler = async function (event) {
-  const { httpMethod, resource, body, pathParameters, queryStringParameters } =
-    event;
+  const {
+    httpMethod,
+    resource,
+    body,
+    pathParameters,
+    queryStringParameters,
+    headers,
+  } = event;
   const routeKey = `${httpMethod} ${resource}`;
 
   let params, password, email, userName, confirmationCode;
@@ -25,6 +32,11 @@ exports.handler = async function (event) {
       } = await service.initiateAuth(params).promise();
       returnObject = { AccessToken: AccessToken };
       break;
+    case "GET /auth/{email}":
+      const something = await verifyToken(headers);
+      returnObject = something;
+      break;
+
     case "HEAD /auth/{email}":
       //send reset code for existing user
       ({ email } = pathParameters);
@@ -126,7 +138,7 @@ exports.handler = async function (event) {
 
   return {
     statusCode: statusCode,
-    headers: headers,
+    headers: returnHeaders,
     body: JSON.stringify(returnObject),
   };
 };

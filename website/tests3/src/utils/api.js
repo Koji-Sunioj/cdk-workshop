@@ -61,3 +61,12 @@ export const resetPassword = async (emailPwd) => {
   }).then((response) => response.status);
   return statusCode;
 };
+
+export const verifiyToken = async (emailToken) => {
+  const { userName, token } = emailToken;
+  const response = await fetch(AuthUrl + userName, {
+    method: "GET",
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((response) => response.json());
+  return response;
+};
