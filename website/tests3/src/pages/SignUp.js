@@ -13,7 +13,7 @@ import {
   signUp,
   confirmSignUp,
   resendConfirmation,
-} from "../utils/api";
+} from "../utils/signUpApi";
 import PwInputs from "../components/PwInputs";
 
 function SignUp() {

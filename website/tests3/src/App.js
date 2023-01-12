@@ -2,6 +2,7 @@ import { createContext, useState } from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 
 import Prices from "./pages/Prices";
+import Albums from "./pages/Albums";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Account from "./pages/Account";
@@ -10,8 +11,9 @@ import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
+import CreateAlbum from "./pages/CreateAlbum";
 
-import { verifiyToken } from "./utils/api";
+import { verifiyToken } from "./utils/signUpApi";
 
 export const globalContext = createContext();
 
@@ -44,11 +46,13 @@ function App() {
         <NavBar />
         <br />
         <Routes>
+          <Route path="/albums" element={<Albums />} />
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Prices />} />
           <Route path="/" element={<HomePage />} />
+          <Route path="/create-album" element={<CreateAlbum />} />
           <Route path="/forgot-password" element={<ForgotPw />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="*" element={<NotFound />} />

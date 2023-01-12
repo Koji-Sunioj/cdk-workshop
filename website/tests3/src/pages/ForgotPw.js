@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import PwInputs from "../components/PwInputs";
-import { forgotPassword, confirmForgotResetPassword } from "../utils/api";
+import { forgotPassword, confirmForgotResetPassword } from "../utils/signUpApi";
 
 function ForgotPw() {
   const navigate = useNavigate();

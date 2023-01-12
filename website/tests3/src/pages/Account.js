@@ -8,7 +8,7 @@ import { globalContext } from "../App";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { resetPassword } from "../utils/api";
+import { resetPassword } from "../utils/signUpApi";
 import PwInputs from "../components/PwInputs";
 
 function Account() {

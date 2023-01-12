@@ -17,6 +17,7 @@ import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 export class CdkWorkshopStack extends cdk.Stack {
+  public readonly albumEndPoint: cdk.CfnOutput;
   public readonly authEndPoint: cdk.CfnOutput;
   public readonly signUpEndPoint: cdk.CfnOutput;
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
@@ -92,21 +93,21 @@ export class CdkWorkshopStack extends cdk.Stack {
     });
 
     //lambda constructor
-    const hello = new lambda.Function(this, "HelloHandler", {
+    const albumLambda = new lambda.Function(this, "AlbumHandler", {
       runtime: lambda.Runtime.NODEJS_14_X,
       code: lambda.Code.fromAsset("lambda"),
-      handler: "hello.handler",
+      handler: "albums.handler",
       environment: {
         ALBUM_TABLE_NAME: table.tableName,
       },
     });
 
     //permission for lambda to invoke table ops
-    table.grantReadWriteData(hello);
+    table.grantReadWriteData(albumLambda);
 
     //api gateway constructor
-    const api = new apigw.LambdaRestApi(this, "Endpoint", {
-      handler: hello,
+    const api = new apigw.LambdaRestApi(this, "AlbumEndpoint", {
+      handler: albumLambda,
       proxy: false,
     });
 
@@ -119,6 +120,10 @@ export class CdkWorkshopStack extends cdk.Stack {
     album.addMethod("GET");
     album.addMethod("DELETE");
     album.addMethod("PATCH");
+
+    this.albumEndPoint = new cdk.CfnOutput(this, "AlbumUrl", {
+      value: `${api.url}${albums.node.id}/`,
+    });
 
     // user pool client needed for user signups, pool id for admin actions
     const signUp = new lambda.Function(this, "SignUpHandler", {
