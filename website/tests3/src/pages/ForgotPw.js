@@ -45,7 +45,7 @@ function ForgotPw() {
       confirmPassword: { value: confirmPassword },
       confirmation: { value: confirmationCode },
     } = event.currentTarget;
-    //console.log(password, confirmPassword, confirmationCode);
+
     const statusCode = await confirmForgotResetPassword({
       userName: userName,
       passWord: password,

@@ -12,11 +12,19 @@ exports.handler = async function (event) {
     queryStringParameters,
     headers,
   } = event;
-  const routeKey = `${httpMethod} ${resource}`;
+  let routeKey = `${httpMethod} ${resource}`;
 
   let params, password, email, userName, confirmationCode;
   let returnObject = {};
   let statusCode = 200;
+
+  if (
+    queryStringParameters !== null &&
+    queryStringParameters.hasOwnProperty("task")
+  ) {
+    const { task } = queryStringParameters;
+    routeKey = `${routeKey} ${task}`;
+  }
 
   switch (routeKey) {
     case "POST /auth":
@@ -32,9 +40,10 @@ exports.handler = async function (event) {
       } = await service.initiateAuth(params).promise();
       returnObject = { AccessToken: AccessToken };
       break;
+
     case "GET /auth/{email}":
-      const something = await verifyToken(headers);
-      returnObject = something;
+      const userType = await verifyToken(headers);
+      returnObject = { ...userType };
       break;
 
     case "HEAD /auth/{email}":
@@ -45,33 +54,39 @@ exports.handler = async function (event) {
         Username: email,
       };
       await service.forgotPassword(params).promise();
+
       break;
-    case "PATCH /auth/{email}":
+    case "PATCH /auth/{email} reset":
+      //reset password existing user
       ({ email } = pathParameters);
-      const { task } = queryStringParameters;
-      ({ confirmationCode, password } = JSON.parse(body));
-      switch (task) {
-        //existing user forgot password
-        case "forgot":
-          params = {
-            ClientId: process.env.USER_POOL_CLIENT,
-            ConfirmationCode: confirmationCode,
-            Password: password,
-            Username: email,
-          };
-          await service.confirmForgotPassword(params).promise();
-          break;
-        case "reset":
-          //existing user needs reset password
-          params = {
-            Password: password,
-            UserPoolId: process.env.USER_POOL_ID,
-            Username: email,
-            Permanent: true,
-          };
-          await service.adminSetUserPassword(params).promise();
-          break;
+      ({ password } = JSON.parse(body));
+      const { type } = await verifyToken(headers);
+      if (type === "user") {
+        params = {
+          Password: password,
+          UserPoolId: process.env.USER_POOL_ID,
+          Username: email,
+          Permanent: true,
+        };
+        await service.adminSetUserPassword(params).promise();
+        returnObject = { message: "successfully updated" };
+      } else {
+        statusCode = 401;
+        returnObject = { message: "not authorized to reset password" };
       }
+      break;
+
+    case "PATCH /auth/{email} forgot":
+      //confirm forgot password with conf code for existing user
+      ({ email } = pathParameters);
+      ({ confirmationCode, password } = JSON.parse(body));
+      params = {
+        ClientId: process.env.USER_POOL_CLIENT,
+        ConfirmationCode: confirmationCode,
+        Password: password,
+        Username: email,
+      };
+      await service.confirmForgotPassword(params).promise();
       returnObject = { message: "successfully updated" };
       break;
 
@@ -84,6 +99,7 @@ exports.handler = async function (event) {
       };
       await service.resendConfirmationCode(params).promise();
       break;
+
     case "POST /sign-up":
       ({ email, password } = JSON.parse(body));
       params = {
@@ -104,21 +120,23 @@ exports.handler = async function (event) {
         const { UserAttributes } = await service
           .adminGetUser(findExistingUser)
           .promise();
-        const userConfirmed = UserAttributes.find(
-          (entry) => entry.Name === "email_verified"
-        ).Value;
-        switch (userConfirmed) {
-          case "false":
-            await service.adminDeleteUser(findExistingUser).promise();
-            newUser = await service.signUp(params).promise();
-            break;
-          default:
-            newUser = { message: "user already exists" };
-            statusCode = 409;
+        const userUnConfirmed =
+          UserAttributes.find((entry) => entry.Name === "email_verified")
+            .Value === "false"
+            ? false
+            : true;
+
+        if (!userUnConfirmed) {
+          await service.adminDeleteUser(findExistingUser).promise();
+          newUser = await service.signUp(params).promise();
+        } else {
+          newUser = { message: "user already exists" };
+          statusCode = 409;
         }
       }
       returnObject = { ...newUser, message: "user created" };
       break;
+
     case "PATCH /sign-up":
       //register new user with confirmation code
       ({ userName, confirmationCode } = JSON.parse(body));
@@ -130,6 +148,7 @@ exports.handler = async function (event) {
       await service.confirmSignUp(params).promise();
       returnObject = { message: "successfully created" };
       break;
+
     default:
       //no matching request
       statusCode = 404;

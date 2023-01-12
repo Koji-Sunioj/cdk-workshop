@@ -51,13 +51,14 @@ export const confirmForgotResetPassword = async (emailPwdConf) => {
   return statusCode;
 };
 
-export const resetPassword = async (emailPwd) => {
-  const { userName, passWord } = emailPwd;
+export const resetPassword = async (emailPwdToken) => {
+  const { userName, passWord, token } = emailPwdToken;
   const statusCode = await fetch(AuthUrl + userName + "?task=reset", {
     method: "PATCH",
     body: JSON.stringify({
       password: passWord,
     }),
+    headers: { Authorization: `Bearer ${token}` },
   }).then((response) => response.status);
   return statusCode;
 };

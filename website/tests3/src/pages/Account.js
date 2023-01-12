@@ -2,6 +2,7 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/Container";
+import NotFound from "./NotFound";
 
 import { globalContext } from "../App";
 import { useContext, useState } from "react";
@@ -12,10 +13,14 @@ import PwInputs from "../components/PwInputs";
 
 function Account() {
   const navigate = useNavigate();
-  const [login, setLogin] = useContext(globalContext);
-  const [resetFlow, setResetFlow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { userName } = login;
+  const [resetFlow, setResetFlow] = useState(false);
+  const [login, setLogin] = useContext(globalContext);
+  let userName, AccessToken;
+
+  if (login !== null) {
+    ({ userName, AccessToken } = login);
+  }
 
   const initiateReset = async (event) => {
     event.preventDefault();
@@ -37,6 +42,7 @@ function Account() {
       const statusCode = await resetPassword({
         userName: userName,
         passWord: password,
+        token: AccessToken,
       });
       switch (statusCode) {
         case 200:
@@ -52,49 +58,53 @@ function Account() {
 
   return (
     <>
-      <Container>
-        <Row>
-          <Col lg="5">
-            {resetFlow ? (
-              <>
-                <h2>Reset password for {userName}</h2>
-                <PwInputs handler={initiateReset} loading={loading} />
-              </>
-            ) : (
-              <>
-                <h2>Welcome {userName}</h2>
-                <div
-                  style={{
-                    paddingTop: "10px",
-                    display: "flex",
-                    flexDirection: "row",
-                    gap: "10px",
-                  }}
-                >
-                  <Button
-                    onClick={() => {
-                      setResetFlow(true);
+      {login === null ? (
+        <NotFound />
+      ) : (
+        <Container>
+          <Row>
+            <Col lg="5">
+              {resetFlow ? (
+                <>
+                  <h2>Reset password for {userName}</h2>
+                  <PwInputs handler={initiateReset} loading={loading} />
+                </>
+              ) : (
+                <>
+                  <h2>Welcome {userName}</h2>
+                  <div
+                    style={{
+                      paddingTop: "10px",
+                      display: "flex",
+                      flexDirection: "row",
+                      gap: "10px",
                     }}
                   >
-                    Reset Password
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setLogin(null);
-                      localStorage.removeItem("userName");
-                      localStorage.removeItem("AccessToken");
-                      alert("successfully logged out");
-                      navigate("/");
-                    }}
-                  >
-                    Sign Out
-                  </Button>
-                </div>
-              </>
-            )}
-          </Col>
-        </Row>
-      </Container>
+                    <Button
+                      onClick={() => {
+                        setResetFlow(true);
+                      }}
+                    >
+                      Reset Password
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setLogin(null);
+                        localStorage.removeItem("userName");
+                        localStorage.removeItem("AccessToken");
+                        alert("successfully logged out");
+                        navigate("/");
+                      }}
+                    >
+                      Sign Out
+                    </Button>
+                  </div>
+                </>
+              )}
+            </Col>
+          </Row>
+        </Container>
+      )}
     </>
   );
 }

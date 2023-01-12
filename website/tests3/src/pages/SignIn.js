@@ -30,10 +30,13 @@ function SignIn() {
     } = event.currentTarget;
     try {
       const token = await authenticate({ userName: email, password: password });
+
       token.hasOwnProperty("AccessToken") &&
         (() => {
           setLogin({ userName: email, ...token });
           setApiState("success");
+          localStorage.removeItem("userName");
+          localStorage.removeItem("AccessToken");
           localStorage.setItem("userName", email);
           localStorage.setItem("AccessToken", token.AccessToken);
           setTimeout(() => {
