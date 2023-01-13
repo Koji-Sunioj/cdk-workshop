@@ -1,31 +1,44 @@
 const AWS = require("aws-sdk");
 const docClient = new AWS.DynamoDB.DocumentClient({ region: "eu-north-1" });
 const { returnHeaders } = require("./utils/headers.js");
+const { verifyToken } = require("./utils/token.js");
 
 exports.handler = async function (event, context) {
-  const { httpMethod, resource, pathParameters, body } = event;
+  const {
+    httpMethod,
+    resource,
+    pathParameters,
+    body,
+    queryStringParameters,
+    headers,
+  } = event;
   const routeKey = `${httpMethod} ${resource}`;
-  const something = process.env.ALBUM_BUCKET_NAME;
-
-  let dbParams = {
-    TableName: process.env.ALBUM_TABLE_NAME,
-  };
-
   let returnObject = {};
-
-  let buckParams = {
-    Bucket: process.env.ALBUM_BUCKET_NAME,
-    Key: "190587680.jpg",
-    Expires: 3600,
-    ContentType: "image/jpeg",
-  };
   let statusCode = 200;
+
+  // let dbParams = {
+  //   TableName: process.env.ALBUM_TABLE_NAME,
+  // };
 
   switch (routeKey) {
     case "GET /albums":
-      const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
-      const url = await s3.getSignedUrl("putObject", buckParams);
-      returnObject = url;
+      const { type } = await verifyToken(headers);
+      console.log(type);
+      if (type === "user") {
+        const { key, content_type } = queryStringParameters;
+        let buckParams = {
+          Bucket: process.env.ALBUM_BUCKET_NAME,
+          Key: key,
+          Expires: 3600,
+          ContentType: content_type,
+        };
+        const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
+        const url = await s3.getSignedUrl("putObject", buckParams);
+        returnObject = { url: url };
+      } else {
+        statusCode = 403;
+      }
+
       break;
     case "POST /albums":
       break;

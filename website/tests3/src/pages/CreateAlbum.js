@@ -7,22 +7,42 @@ import Button from "react-bootstrap/esm/Button";
 
 import { getSignedUrl } from "../utils/albumApi";
 
-import { useState } from "react";
+import { globalContext } from "../App";
+import { useState, useContext } from "react";
 
 const CreateAlbum = () => {
+  const [login] = useContext(globalContext);
   const [previews, setPreviews] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const test = async (event) => {
+    setLoading(true);
     event.preventDefault();
 
-    const url = await getSignedUrl();
+    const { AccessToken } = login;
+    const {
+      target: {
+        upload: { files: file },
+      },
+    } = event;
 
-    const file = event.target.upload.files[0];
+    console.log(file[0]);
 
-    await fetch(url, {
+    const { name, type } = file[0];
+    const { url } = await getSignedUrl({
+      name: name,
+      type: type,
+      token: AccessToken,
+    });
+
+    console.log(url);
+
+    const something = await fetch(url, {
       method: "PUT",
       body: file,
     });
+    console.log(something);
+    setLoading(false);
   };
 
   // const showPreviews = (event) => {
@@ -35,14 +55,15 @@ const CreateAlbum = () => {
         <Col lg="5">
           <h2>Create album</h2>
           <Form onSubmit={test} encType="multipart/form-data">
-            <Form.Group className="mb-3">
-              <Form.Label>Multiple files input example</Form.Label>
-              <Form.Control type="file" name="upload" accept="image/*" />
-            </Form.Group>
-
-            <Button type="submit" variant="primary">
-              Submit
-            </Button>
+            <fieldset disabled={loading}>
+              <Form.Group className="mb-3">
+                <Form.Label>Multiple files input example</Form.Label>
+                <Form.Control type="file" name="upload" accept="image/*" />
+              </Form.Group>
+              <Button type="submit" variant="primary">
+                Submit
+              </Button>
+            </fieldset>
           </Form>
         </Col>
       </Row>

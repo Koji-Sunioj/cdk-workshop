@@ -117,6 +117,8 @@ export class CdkWorkshopStack extends cdk.Stack {
       environment: {
         ALBUM_TABLE_NAME: table.tableName,
         ALBUM_BUCKET_NAME: s3Bucket.bucketName,
+        USER_POOL_CLIENT: userPoolClient.userPoolClientId,
+        USER_POOL_ID: userPool.userPoolId,
       },
     });
 
@@ -129,6 +131,9 @@ export class CdkWorkshopStack extends cdk.Stack {
     const api = new apigw.LambdaRestApi(this, "AlbumEndpoint", {
       handler: albumLambda,
       proxy: false,
+      defaultCorsPreflightOptions: {
+        allowOrigins: apigw.Cors.ALL_ORIGINS,
+      },
     });
 
     //creating paths and methods for api
