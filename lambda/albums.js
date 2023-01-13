@@ -29,16 +29,17 @@ exports.handler = async function (event, context) {
         let buckParams = {
           Bucket: process.env.ALBUM_BUCKET_NAME,
           Key: key,
-          Expires: 3600,
+          Expires: 20,
           ContentType: content_type,
         };
+
         const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
         const url = await s3.getSignedUrl("putObject", buckParams);
         returnObject = { url: url };
       } else {
         statusCode = 403;
       }
-
+      returnObject;
       break;
     case "POST /albums":
       break;

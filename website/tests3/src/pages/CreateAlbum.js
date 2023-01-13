@@ -2,10 +2,13 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Card from "react-bootstrap/Card";
-import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/esm/Button";
+import Container from "react-bootstrap/Container";
+import InputGroup from "react-bootstrap/InputGroup";
+import CloseButton from "react-bootstrap/CloseButton";
 
 import { getSignedUrl } from "../utils/albumApi";
+import NotFound from "./NotFound";
 
 import { globalContext } from "../App";
 import { useState, useContext } from "react";
@@ -18,112 +21,142 @@ const CreateAlbum = () => {
   const test = async (event) => {
     setLoading(true);
     event.preventDefault();
-
     const { AccessToken } = login;
     const {
       target: {
-        upload: { files: file },
+        upload: { files },
       },
     } = event;
-
-    console.log(file[0]);
-
-    const { name, type } = file[0];
-    const { url } = await getSignedUrl({
-      name: name,
-      type: type,
-      token: AccessToken,
+    const finished = [];
+    Array.from(files).forEach(async (file) => {
+      const { name, type } = file;
+      const { url } = await getSignedUrl({
+        name: name,
+        type: type,
+        token: AccessToken,
+      });
+      const response = await fetch(url, {
+        method: "PUT",
+        body: file,
+      });
+      finished.push({ completed: response.ok, file: name });
+      console.log(finished);
     });
-
-    console.log(url);
-
-    const something = await fetch(url, {
-      method: "PUT",
-      body: file,
-    });
-    console.log(something);
+    console.log("finished");
     setLoading(false);
   };
 
-  // const showPreviews = (event) => {
-  //   setPreviews(event.currentTarget.files);
-  // };
+  const previewMapping = (files) => {
+    const temp = [];
+    Array.from(files).forEach((file) => {
+      temp.push({
+        completed: false,
+        name: file.name,
+        file: file,
+        closed: true,
+      });
+    });
+    return temp;
+  };
+
+  const albumAble = previews.length > 0 && login !== null;
 
   return (
-    <Container>
-      <Row>
-        <Col lg="5">
-          <h2>Create album</h2>
-          <Form onSubmit={test} encType="multipart/form-data">
-            <fieldset disabled={loading}>
-              <Form.Group className="mb-3">
-                <Form.Label>Multiple files input example</Form.Label>
-                <Form.Control type="file" name="upload" accept="image/*" />
-              </Form.Group>
-              <Button type="submit" variant="primary">
-                Submit
-              </Button>
-            </fieldset>
-          </Form>
-        </Col>
-      </Row>
-    </Container>
+    <>
+      {login === null ? (
+        <NotFound />
+      ) : (
+        <Container>
+          <Row>
+            <Col lg="5">
+              <h2>Create album</h2>
+              <Form onSubmit={test} encType="multipart/form-data">
+                <fieldset disabled={loading}>
+                  <Form.Group className="mb-3">
+                    <Form.Label>Multiple files input example</Form.Label>
+                    <Form.Control
+                      id="fileInput"
+                      type="file"
+                      name="upload"
+                      accept="image/*"
+                      multiple
+                      onChange={(e) => {
+                        const previewArray = previewMapping(e.target.files);
+                        setPreviews(previewArray);
+                      }}
+                    />
+                  </Form.Group>
+                  {albumAble && (
+                    <Button type="submit" variant="primary">
+                      Submit
+                    </Button>
+                  )}
+                </fieldset>
+              </Form>
+            </Col>
+          </Row>
+          {Array.from(previews).map((file) => (
+            <Row className="mt-5" key={file.name}>
+              <Col lg="5">
+                <Card>
+                  <CloseButton
+                    size="lg"
+                    onClick={() => {
+                      const copy = [...previews];
+                      const filtered = copy.filter(
+                        (item) => item.name !== file.name
+                      );
+                      setPreviews(filtered);
+                      const dt = new DataTransfer();
+                      Array.from(previews).forEach((item) => {
+                        if (item.name !== file.name) {
+                          dt.items.add(item.file);
+                        }
+                      });
+                      const input = document.getElementById("fileInput");
+                      input.files = dt.files;
+                    }}
+                  />
+                  <Card.Img
+                    variant="top"
+                    src={URL.createObjectURL(file.file)}
+                    className="p-3"
+                  />
+                  <Card.Body>
+                    <InputGroup className="mb-3">
+                      <InputGroup.Checkbox
+                        aria-label="Checkbox for following text input"
+                        onChange={(e) => {
+                          const { checked } = e.currentTarget;
+                          const copy = [...previews];
+                          const index = copy.findIndex(
+                            (item) => item.name === file.name
+                          );
+                          copy[index].closed = !checked;
+                          setPreviews(copy);
+                        }}
+                      />
+                      <Form.Control
+                        type="text"
+                        placeholder="A fancy title"
+                        name="title"
+                        autoComplete="on"
+                        defaultValue={file.name}
+                        disabled={file.closed}
+                      />
+                    </InputGroup>
+                  </Card.Body>
+                  <Card.Footer>
+                    <small className="text-muted">{file.name}</small>
+                  </Card.Footer>
+                </Card>
+              </Col>
+            </Row>
+          ))}
+        </Container>
+      )}
+    </>
   );
 };
 
 export default CreateAlbum;
-
-/* <Container>
-      <Row>
-        <Col lg="5">
-          <h2>Create album</h2>
-          <Form onSubmit={test} encType="multipart/form-data">
-            <Form.Group className="mb-3">
-              <Form.Control
-                type="text"
-                placeholder="A fancy title"
-                name="title"
-                autoComplete="on"
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Multiple files input example</Form.Label>
-              <Form.Control
-                type="file"
-                multiple
-                name="files"
-                accept="image/*"
-                onChange={showPreviews}
-              />
-            </Form.Group>
-            {previews.length > 0 && (
-              <Button type="submit" variant="primary">
-                Submit
-              </Button>
-            )}
-          </Form>
-        </Col>
-      </Row>
-      {Array.from(previews).map((file) => (
-        <Row className="mt-5">
-          <Col lg="5">
-            <Card>
-              <Card.Img
-                variant="top"
-                src={URL.createObjectURL(file)}
-                className="p-3"
-              />
-              <Card.Body>
-                <Form.Control
-                  type="text"
-                  placeholder="A fancy title"
-                  name="title"
-                  autoComplete="on"
-                  value={file.name}
-                />
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      ))}
-    </Container>*/
