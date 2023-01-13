@@ -5,28 +5,54 @@ import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
 import Button from "react-bootstrap/esm/Button";
 
+import { getSignedUrl } from "../utils/albumApi";
+
 import { useState } from "react";
 
 const CreateAlbum = () => {
   const [previews, setPreviews] = useState([]);
 
-  const test = (event) => {
+  const test = async (event) => {
     event.preventDefault();
 
-    console.log(event.currentTarget.files);
+    const url = await getSignedUrl();
+
+    const file = event.target.upload.files[0];
+
+    await fetch(url, {
+      method: "PUT",
+      body: file,
+    });
   };
 
-  const showPreviews = (event) => {
-    setPreviews(event.currentTarget.files);
-  };
-
-  console.log(previews);
-  Array.from(previews).forEach((file) =>
-    console.log("Do something with " + file.name)
-  );
+  // const showPreviews = (event) => {
+  //   setPreviews(event.currentTarget.files);
+  // };
 
   return (
     <Container>
+      <Row>
+        <Col lg="5">
+          <h2>Create album</h2>
+          <Form onSubmit={test} encType="multipart/form-data">
+            <Form.Group className="mb-3">
+              <Form.Label>Multiple files input example</Form.Label>
+              <Form.Control type="file" name="upload" accept="image/*" />
+            </Form.Group>
+
+            <Button type="submit" variant="primary">
+              Submit
+            </Button>
+          </Form>
+        </Col>
+      </Row>
+    </Container>
+  );
+};
+
+export default CreateAlbum;
+
+/* <Container>
       <Row>
         <Col lg="5">
           <h2>Create album</h2>
@@ -79,8 +105,4 @@ const CreateAlbum = () => {
           </Col>
         </Row>
       ))}
-    </Container>
-  );
-};
-
-export default CreateAlbum;
+    </Container>*/

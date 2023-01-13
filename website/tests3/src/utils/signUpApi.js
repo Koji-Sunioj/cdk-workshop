@@ -2,8 +2,6 @@ import apiUrls from "../apis.json";
 
 const { AuthUrl, SignUpUrl } = apiUrls.CdkWorkshopStack;
 
-//const authUrl = "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/";
-
 export const authenticate = async (login) => {
   const token = await fetch(AuthUrl, {
     method: "POST",

@@ -1,4 +1,6 @@
 import * as cdk from "aws-cdk-lib";
+import * as s3 from "aws-cdk-lib/aws-s3";
+import * as kms from "aws-cdk-lib/aws-kms";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
@@ -22,6 +24,21 @@ export class CdkWorkshopStack extends cdk.Stack {
   public readonly signUpEndPoint: cdk.CfnOutput;
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+
+    //storage bucket
+    const s3Bucket = new s3.Bucket(this, "albumBucket", {
+      publicReadAccess: true,
+      objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_ENFORCED,
+      cors: [
+        {
+          allowedMethods: [s3.HttpMethods.PUT],
+          allowedOrigins: ["*"],
+          allowedHeaders: ["*"],
+        },
+      ],
+    });
+
+    s3Bucket.grantRead(new iam.AccountRootPrincipal());
 
     /* self sign up allows user to register on their own. autoverify is for 
     confirmation code. sign in alias is when email used as username. custom 
@@ -99,8 +116,11 @@ export class CdkWorkshopStack extends cdk.Stack {
       handler: "albums.handler",
       environment: {
         ALBUM_TABLE_NAME: table.tableName,
+        ALBUM_BUCKET_NAME: s3Bucket.bucketName,
       },
     });
+
+    s3Bucket.grantPut(albumLambda);
 
     //permission for lambda to invoke table ops
     table.grantReadWriteData(albumLambda);
