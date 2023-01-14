@@ -27,39 +27,63 @@ const CreateAlbum = () => {
         upload: { files },
       },
     } = event;
-    const finished = [];
-    Array.from(files).forEach(async (file) => {
-      const { name, type } = file;
-      const { url } = await getSignedUrl({
-        name: name,
-        type: type,
-        token: AccessToken,
-      });
-      const response = await fetch(url, {
-        method: "PUT",
-        body: file,
-      });
-      finished.push({ completed: response.ok, file: name });
-      console.log(finished);
-    });
-    console.log("finished");
+
+    const texts = await Promise.all(
+      Array.from(files).map(async (file) => {
+        const { name, type } = file;
+        const { url } = await getSignedUrl({
+          name: name,
+          type: type,
+          token: AccessToken,
+        });
+        const response = await fetch(url, {
+          method: "PUT",
+          body: file,
+        });
+
+        if (response.status === 200) {
+          const copy = [...previews];
+          const index = copy.findIndex((item) => item.name === name);
+          copy[index].completed = true;
+          setPreviews(copy);
+        }
+
+        return response;
+      })
+    );
+
+    console.log(texts);
+
     setLoading(false);
   };
 
   const previewMapping = (files) => {
     const temp = [];
     Array.from(files).forEach((file) => {
+      console.log(file);
       temp.push({
         completed: false,
         name: file.name,
         file: file,
+        blob: URL.createObjectURL(file),
         closed: true,
+        text: null,
       });
     });
     return temp;
   };
 
   const albumAble = previews.length > 0 && login !== null;
+
+  const mutateCopy = (newValue, file, attribute) => {
+    const copy = [...previews];
+    const index = copy.findIndex((item) => item.name === file.name);
+    copy[index][attribute] = newValue;
+    if (attribute === "closed" && typeof newValue == "boolean") {
+      copy[index].text = null;
+    }
+    return copy;
+  };
 
   return (
     <>
@@ -72,8 +96,14 @@ const CreateAlbum = () => {
               <h2>Create album</h2>
               <Form onSubmit={test} encType="multipart/form-data">
                 <fieldset disabled={loading}>
+                  {albumAble && (
+                    <Form.Group className="mb-3">
+                      <Form.Label>Multiple files input example</Form.Label>
+                      <Form.Control type="text" name="title" />
+                    </Form.Group>
+                  )}
                   <Form.Group className="mb-3">
-                    <Form.Label>Multiple files input example</Form.Label>
+                    <Form.Label>Upload your files (max 10)</Form.Label>
                     <Form.Control
                       id="fileInput"
                       type="file"
@@ -81,8 +111,13 @@ const CreateAlbum = () => {
                       accept="image/*"
                       multiple
                       onChange={(e) => {
-                        const previewArray = previewMapping(e.target.files);
-                        setPreviews(previewArray);
+                        if (e.target.files.length > 10) {
+                          e.preventDefault();
+                          e.target.value = null;
+                        } else {
+                          const previewArray = previewMapping(e.target.files);
+                          setPreviews(previewArray);
+                        }
                       }}
                     />
                   </Form.Group>
@@ -99,53 +134,56 @@ const CreateAlbum = () => {
             <Row className="mt-5" key={file.name}>
               <Col lg="5">
                 <Card>
-                  <CloseButton
-                    size="lg"
-                    onClick={() => {
-                      const copy = [...previews];
-                      const filtered = copy.filter(
-                        (item) => item.name !== file.name
-                      );
-                      setPreviews(filtered);
-                      const dt = new DataTransfer();
-                      Array.from(previews).forEach((item) => {
-                        if (item.name !== file.name) {
-                          dt.items.add(item.file);
-                        }
-                      });
-                      const input = document.getElementById("fileInput");
-                      input.files = dt.files;
-                    }}
-                  />
-                  <Card.Img
-                    variant="top"
-                    src={URL.createObjectURL(file.file)}
-                    className="p-3"
-                  />
-                  <Card.Body>
-                    <InputGroup className="mb-3">
-                      <InputGroup.Checkbox
-                        aria-label="Checkbox for following text input"
-                        onChange={(e) => {
-                          const { checked } = e.currentTarget;
+                  <fieldset disabled={loading}>
+                    {file.completed ? (
+                      <div style={{ color: "green" }}>&#x2705;</div>
+                    ) : (
+                      <CloseButton
+                        size="lg"
+                        onClick={() => {
                           const copy = [...previews];
-                          const index = copy.findIndex(
-                            (item) => item.name === file.name
+                          const filtered = copy.filter(
+                            (item) => item.name !== file.name
                           );
-                          copy[index].closed = !checked;
-                          setPreviews(copy);
+                          setPreviews(filtered);
+                          const dt = new DataTransfer();
+                          Array.from(previews).forEach((item) => {
+                            if (item.name !== file.name) {
+                              dt.items.add(item.file);
+                            }
+                          });
+                          const input = document.getElementById("fileInput");
+                          input.files = dt.files;
                         }}
                       />
-                      <Form.Control
-                        type="text"
-                        placeholder="A fancy title"
-                        name="title"
-                        autoComplete="on"
-                        defaultValue={file.name}
-                        disabled={file.closed}
-                      />
-                    </InputGroup>
-                  </Card.Body>
+                    )}
+                    <Card.Img variant="top" src={file.blob} className="p-3" />
+                    <Card.Body>
+                      <InputGroup className="mb-3">
+                        <InputGroup.Checkbox
+                          aria-label="Checkbox for following text input"
+                          onChange={(e) => {
+                            const { checked } = e.currentTarget;
+                            const copy = mutateCopy(!checked, file, "closed");
+                            setPreviews(copy);
+                          }}
+                        />
+                        <Form.Control
+                          type="text"
+                          placeholder="A fancy title"
+                          name="title"
+                          autoComplete="on"
+                          value={file.text === null ? "" : file.text}
+                          disabled={file.closed}
+                          onChange={(e) => {
+                            const { value } = e.currentTarget;
+                            const copy = mutateCopy(value, file, "text");
+                            setPreviews(copy);
+                          }}
+                        />
+                      </InputGroup>
+                    </Card.Body>
+                  </fieldset>
                   <Card.Footer>
                     <small className="text-muted">{file.name}</small>
                   </Card.Footer>
