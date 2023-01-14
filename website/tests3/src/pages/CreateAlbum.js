@@ -22,15 +22,15 @@ const CreateAlbum = () => {
     setLoading(true);
     event.preventDefault();
     const { AccessToken } = login;
-    const {
-      target: {
-        upload: { files },
-      },
-    } = event;
 
-    const texts = await Promise.all(
-      Array.from(files).map(async (file) => {
-        const { name, type } = file;
+    const {
+      title: { value: title },
+    } = event.currentTarget;
+
+    const dynamoData = [];
+    const responses = await Promise.all(
+      previews.map(async (item) => {
+        const { name, type, file, text } = item;
         const { url } = await getSignedUrl({
           name: name,
           type: type,
@@ -40,30 +40,27 @@ const CreateAlbum = () => {
           method: "PUT",
           body: file,
         });
-
-        if (response.status === 200) {
-          const copy = [...previews];
-          const index = copy.findIndex((item) => item.name === name);
-          copy[index].completed = true;
-          setPreviews(copy);
-        }
-
-        return response;
+        dynamoData.push({ url: response.url.split("?")[0], text: text });
+        mutateCopy(response.ok, file, "completed");
+        return response.ok;
       })
     );
-
-    console.log(texts);
-
+    if (responses.every((response) => response)) {
+      const dynamoAlbum = {
+        title: title,
+        photos: dynamoData,
+      };
+    }
     setLoading(false);
   };
 
   const previewMapping = (files) => {
     const temp = [];
     Array.from(files).forEach((file) => {
-      console.log(file);
       temp.push({
         completed: false,
         name: file.name,
+        type: file.type,
         file: file,
         blob: URL.createObjectURL(file),
         closed: true,
@@ -76,13 +73,14 @@ const CreateAlbum = () => {
   const albumAble = previews.length > 0 && login !== null;
 
   const mutateCopy = (newValue, file, attribute) => {
+    console.log(previews);
     const copy = [...previews];
     const index = copy.findIndex((item) => item.name === file.name);
     copy[index][attribute] = newValue;
     if (attribute === "closed" && typeof newValue == "boolean") {
       copy[index].text = null;
     }
-    return copy;
+    setPreviews(copy);
   };
 
   return (
@@ -164,8 +162,7 @@ const CreateAlbum = () => {
                           aria-label="Checkbox for following text input"
                           onChange={(e) => {
                             const { checked } = e.currentTarget;
-                            const copy = mutateCopy(!checked, file, "closed");
-                            setPreviews(copy);
+                            mutateCopy(!checked, file, "closed");
                           }}
                         />
                         <Form.Control
@@ -177,8 +174,7 @@ const CreateAlbum = () => {
                           disabled={file.closed}
                           onChange={(e) => {
                             const { value } = e.currentTarget;
-                            const copy = mutateCopy(value, file, "text");
-                            setPreviews(copy);
+                            mutateCopy(value, file, "text");
                           }}
                         />
                       </InputGroup>
