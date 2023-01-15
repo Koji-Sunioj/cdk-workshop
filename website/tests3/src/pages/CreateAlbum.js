@@ -14,6 +14,7 @@ import { useState, useContext } from "react";
 
 const CreateAlbum = () => {
   const [index, setIndex] = useState(0);
+  const [editMode, setEditMode] = useState(false);
   const [login] = useContext(globalContext);
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -51,7 +52,6 @@ const CreateAlbum = () => {
       };
     }
     setLoading(false);
-    console.log(dynamoAlbum);
   };
 
   const previewMapping = (files) => {
@@ -70,8 +70,6 @@ const CreateAlbum = () => {
     });
     return temp;
   };
-
-  const albumAble = previews.length > 0 && login !== null;
 
   const mutateCopy = (newValue, file, attribute) => {
     const copy = [...previews];
@@ -99,7 +97,7 @@ const CreateAlbum = () => {
   };
 
   previews.sort((a, b) => (a.order > b.order ? 1 : b.order > a.order ? -1 : 0));
-  console.log(previews);
+  const albumAble = previews.length > 0 && login !== null;
 
   return (
     <>
@@ -132,9 +130,20 @@ const CreateAlbum = () => {
                     />
                   </Form.Group>
                   {albumAble && (
-                    <Button type="submit" variant="primary">
-                      Submit
-                    </Button>
+                    <>
+                      <Form.Group className="mb-3">
+                        <Form.Check
+                          label="edit mode"
+                          onChange={(e) => {
+                            const { checked } = e.currentTarget;
+                            setEditMode(checked);
+                          }}
+                        />
+                      </Form.Group>
+                      <Button type="submit" variant="primary">
+                        Submit
+                      </Button>
+                    </>
                   )}
                 </fieldset>
               </Form>
@@ -189,73 +198,75 @@ const CreateAlbum = () => {
                       display: "block",
                     }}
                   />
-                  <Carousel.Caption>
-                    <div
-                      style={{
-                        backgroundColor: "white",
-                        border: "1px solid black",
-                        width: "50%",
-                        margin: "auto",
-                        borderRadius: "10px",
-                        padding: "10px",
-                        textAlign: "start",
-                      }}
-                    >
-                      <h2 style={{ wordWrap: "break-word" }}>{file.name}</h2>
-                      <p>
-                        Photo: {file.order} / {previews.length}
-                      </p>
-                      <Form.Group className="mb-3">
-                        <Form.Check
-                          checked={!file.closed}
-                          label="add text"
-                          onChange={(e) => {
-                            const { checked } = e.currentTarget;
-                            mutateCopy(!checked, file, "closed");
-                          }}
-                        />
-                      </Form.Group>
-                      <Form.Group className="mb-3">
-                        <Form.Control
-                          type="text"
-                          placeholder="A fancy title"
-                          name="title"
-                          value={file.text === null ? "" : file.text}
-                          disabled={file.closed}
-                          onChange={(e) => {
-                            const { value } = e.currentTarget;
-                            mutateCopy(value, file, "text");
-                          }}
-                        />
-                      </Form.Group>
+                  {editMode && (
+                    <Carousel.Caption>
                       <div
                         style={{
-                          display: "flex",
-                          flexDirection: "row",
-                          justifyContent: "space-around",
+                          backgroundColor: "white",
+                          border: "1px solid black",
+                          width: "100%",
+                          margin: "auto",
+                          borderRadius: "10px",
+                          padding: "10px",
+                          textAlign: "start",
                         }}
                       >
-                        <Button
-                          variant="primary"
-                          disabled={file.order === 1}
-                          onClick={() => {
-                            reOrder(file.order, "front");
+                        <h2 style={{ wordWrap: "break-word" }}>{file.name}</h2>
+                        <p>
+                          Photo: {file.order} / {previews.length}
+                        </p>
+                        <Form.Group className="mb-3">
+                          <Form.Check
+                            checked={!file.closed}
+                            label="add text"
+                            onChange={(e) => {
+                              const { checked } = e.currentTarget;
+                              mutateCopy(!checked, file, "closed");
+                            }}
+                          />
+                        </Form.Group>
+                        <Form.Group className="mb-3">
+                          <Form.Control
+                            type="text"
+                            placeholder="A fancy title"
+                            name="title"
+                            value={file.text === null ? "" : file.text}
+                            disabled={file.closed}
+                            onChange={(e) => {
+                              const { value } = e.currentTarget;
+                              mutateCopy(value, file, "text");
+                            }}
+                          />
+                        </Form.Group>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "row",
+                            justifyContent: "space-around",
                           }}
                         >
-                          Push forward
-                        </Button>
-                        <Button
-                          variant="primary"
-                          disabled={file.order === previews.length}
-                          onClick={() => {
-                            reOrder(file.order, "back");
-                          }}
-                        >
-                          Push backward
-                        </Button>
+                          <Button
+                            variant="primary"
+                            disabled={file.order === 1}
+                            onClick={() => {
+                              reOrder(file.order, "front");
+                            }}
+                          >
+                            Push forward
+                          </Button>
+                          <Button
+                            variant="primary"
+                            disabled={file.order === previews.length}
+                            onClick={() => {
+                              reOrder(file.order, "back");
+                            }}
+                          >
+                            Push backward
+                          </Button>
+                        </div>
                       </div>
-                    </div>
-                  </Carousel.Caption>
+                    </Carousel.Caption>
+                  )}
                 </Carousel.Item>
               ))}
             </Carousel>
