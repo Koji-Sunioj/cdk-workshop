@@ -15,14 +15,16 @@ exports.handler = async function (event, context) {
   const routeKey = `${httpMethod} ${resource}`;
   let returnObject = {};
   let statusCode = 200;
+  let type;
 
-  // let dbParams = {
-  //   TableName: process.env.ALBUM_TABLE_NAME,
-  // };
+  let dbParams = {
+    TableName: process.env.ALBUM_TABLE_NAME,
+  };
+  console.log(routeKey);
 
   switch (routeKey) {
-    case "GET /albums":
-      const { type } = await verifyToken(headers);
+    case "GET /albums/init":
+      ({ type } = await verifyToken(headers));
       if (type === "user") {
         const { key, content_type } = queryStringParameters;
         let buckParams = {
@@ -31,7 +33,6 @@ exports.handler = async function (event, context) {
           Expires: 20,
           ContentType: content_type,
         };
-
         const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
         const url = await s3.getSignedUrl("putObject", buckParams);
         returnObject = { url: url };
@@ -40,7 +41,23 @@ exports.handler = async function (event, context) {
       }
       returnObject;
       break;
+    case "GET /albums":
+      break;
     case "POST /albums":
+      ({ type } = await verifyToken(headers));
+      if (type === "user") {
+        const newAlbum = JSON.parse(body);
+        newAlbum.created = new Date().toISOString();
+        await docClient
+          .put({
+            ...dbParams,
+            Item: newAlbum,
+          })
+          .promise();
+        returnObject = { ...newAlbum };
+      } else {
+        statusCode = 403;
+      }
       break;
     case "DELETE /albums/{albumId}":
       break;

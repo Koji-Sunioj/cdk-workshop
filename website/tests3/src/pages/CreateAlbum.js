@@ -8,13 +8,15 @@ import AlbumEdit from "../components/AlbumEdit";
 import UploadCarousel from "../components/UploadCarousel";
 import NotFound from "./NotFound";
 
-import { getSignedUrl } from "../utils/albumApi";
+import { getSignedUrl, newAlbum } from "../utils/albumApi";
 
 import uuid from "react-uuid";
+import { useNavigate } from "react-router-dom";
 import { globalContext } from "../App";
 import { useState, useContext } from "react";
 
 const CreateAlbum = () => {
+  const navigate = useNavigate();
   const [index, setIndex] = useState(0);
   const [uploadStep, setUploadStep] = useState("upload");
   const [editMode, setEditMode] = useState(false);
@@ -23,12 +25,15 @@ const CreateAlbum = () => {
   const [loading, setLoading] = useState(false);
 
   const createAlbum = async (event) => {
-    const albumId = uuid();
-    setLoading(true);
     event.preventDefault();
-    const { AccessToken } = login;
+    setLoading(true);
+
+    const albumId = uuid();
+    const { AccessToken, userName } = login;
     let dynamoAlbum;
+
     const dynamoData = [];
+
     const responses = await Promise.all(
       previews.map(async (item) => {
         const { name, type, file, text, order } = item;
@@ -54,9 +59,23 @@ const CreateAlbum = () => {
     if (responses.every((response) => response)) {
       dynamoAlbum = {
         photos: dynamoData,
+        albumId: albumId,
+        userName: userName,
       };
+      const statusCode = await newAlbum({
+        token: AccessToken,
+        album: dynamoAlbum,
+      });
+      switch (statusCode) {
+        case 200:
+          alert("successfully created album");
+          navigate("/albums");
+          break;
+        default:
+          alert("there was an error");
+      }
     }
-    console.log(dynamoAlbum);
+
     setLoading(false);
   };
 

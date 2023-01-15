@@ -19,6 +19,7 @@ import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 export class CdkWorkshopStack extends cdk.Stack {
+  public readonly albumInitEndPoint: cdk.CfnOutput;
   public readonly albumEndPoint: cdk.CfnOutput;
   public readonly authEndPoint: cdk.CfnOutput;
   public readonly signUpEndPoint: cdk.CfnOutput;
@@ -141,6 +142,9 @@ export class CdkWorkshopStack extends cdk.Stack {
     albums.addMethod("GET");
     albums.addMethod("POST");
 
+    const init = albums.addResource("init");
+    init.addMethod("GET");
+
     const album = albums.addResource("{albumId}");
     album.addMethod("GET");
     album.addMethod("DELETE");
@@ -148,6 +152,10 @@ export class CdkWorkshopStack extends cdk.Stack {
 
     this.albumEndPoint = new cdk.CfnOutput(this, "AlbumUrl", {
       value: `${api.url}${albums.node.id}/`,
+    });
+
+    this.albumInitEndPoint = new cdk.CfnOutput(this, "AlbumInitUrl", {
+      value: `${api.url}${albums.node.id}/${init.node.id}/`,
     });
 
     // user pool client needed for user signups, pool id for admin actions
