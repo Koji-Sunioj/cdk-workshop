@@ -163,29 +163,43 @@ const CreateAlbum = () => {
               {previews.map((file, n) => (
                 <Carousel.Item key={file.order}>
                   {file.completed ? (
-                    <div style={{ color: "green" }}>&#x2705;</div>
-                  ) : (
-                    <CloseButton
-                      style={{ position: "absolute", right: "0", color: "red" }}
-                      size="lg"
-                      onClick={() => {
-                        const copy = [...previews];
-                        const filtered = copy.filter(
-                          (item) => item.name !== file.name
-                        );
-                        filtered.forEach((item, n) => (item.order = n + 1));
-                        setPreviews(filtered);
-                        const dt = new DataTransfer();
-                        Array.from(previews).forEach((item) => {
-                          if (item.name !== file.name) {
-                            dt.items.add(item.file);
-                          }
-                        });
-                        setIndex(0);
-                        const input = document.getElementById("fileInput");
-                        input.files = dt.files;
+                    <div
+                      style={{
+                        color: "green",
+                        position: "absolute",
+                        right: "0",
                       }}
-                    />
+                    >
+                      &#x2705;
+                    </div>
+                  ) : (
+                    editMode && (
+                      <CloseButton
+                        style={{
+                          position: "absolute",
+                          right: "0",
+                          color: "red",
+                        }}
+                        size="lg"
+                        onClick={() => {
+                          const copy = [...previews];
+                          const filtered = copy.filter(
+                            (item) => item.name !== file.name
+                          );
+                          filtered.forEach((item, n) => (item.order = n + 1));
+                          setPreviews(filtered);
+                          const dt = new DataTransfer();
+                          Array.from(previews).forEach((item) => {
+                            if (item.name !== file.name) {
+                              dt.items.add(item.file);
+                            }
+                          });
+                          setIndex(0);
+                          const input = document.getElementById("fileInput");
+                          input.files = dt.files;
+                        }}
+                      />
+                    )
                   )}
                   <img
                     src={file.blob}
