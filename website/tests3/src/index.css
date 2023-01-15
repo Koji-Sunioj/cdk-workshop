@@ -20,3 +20,24 @@ code {
   margin-top: auto;
   margin-bottom: auto;
 }
+
+
+.carousel-img {
+  height: 50vw;
+ 
+}
+
+
+@media screen and (max-width: 768px) {
+  .carousel-img {
+    height: 80vw;
+  }
+  .carousel-p
+  {
+    white-space: nowrap; 
+    width: 100%; 
+    overflow: hidden;
+    text-overflow: ellipsis; 
+   }
+  
+}

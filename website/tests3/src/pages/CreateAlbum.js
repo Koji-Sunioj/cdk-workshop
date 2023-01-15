@@ -1,13 +1,12 @@
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
-import Carousel from "react-bootstrap/Carousel";
-import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/Container";
-import CloseButton from "react-bootstrap/CloseButton";
 
+import AlbumUpload from "../components/AlbumUpload";
+import AlbumEdit from "../components/AlbumEdit";
+import UploadCarousel from "../components/UploadCarousel";
 import NotFound from "./NotFound";
-import { carouselEditPanel, carouselImg, buttonRow } from "../utils/styles";
 import { getSignedUrl } from "../utils/albumApi";
 
 import { globalContext } from "../App";
@@ -15,6 +14,7 @@ import { useState, useContext } from "react";
 
 const CreateAlbum = () => {
   const [index, setIndex] = useState(0);
+  const [uploadStep, setUploadStep] = useState("upload");
   const [editMode, setEditMode] = useState(false);
   const [login] = useContext(globalContext);
   const [previews, setPreviews] = useState([]);
@@ -69,7 +69,7 @@ const CreateAlbum = () => {
         order: i + 1,
       });
     });
-    return temp;
+    setPreviews(temp);
   };
 
   const mutateCopy = (newValue, file, attribute) => {
@@ -85,17 +85,14 @@ const CreateAlbum = () => {
   const deletePicture = (file) => {
     const copy = [...previews];
     const filtered = copy.filter((item) => item.name !== file.name);
-    filtered.forEach((item, n) => (item.order = n + 1));
-    setPreviews(filtered);
-    const dt = new DataTransfer();
-    Array.from(previews).forEach((item) => {
-      if (item.name !== file.name) {
-        dt.items.add(item.file);
-      }
-    });
-    setIndex(0);
-    const input = document.getElementById("fileInput");
-    input.files = dt.files;
+    if (filtered.length === 0) {
+      setUploadStep("upload");
+      setEditMode(false);
+    } else {
+      filtered.forEach((item, n) => (item.order = n + 1));
+      setPreviews(filtered);
+      setIndex(0);
+    }
   };
 
   const reOrder = (order, position) => {
@@ -114,7 +111,7 @@ const CreateAlbum = () => {
   };
 
   previews.sort((a, b) => (a.order > b.order ? 1 : b.order > a.order ? -1 : 0));
-  const albumAble = previews.length > 0 && login !== null;
+  const editAble = previews.length > 0 && uploadStep === "edit";
 
   return (
     <>
@@ -124,148 +121,35 @@ const CreateAlbum = () => {
         <Container>
           <Row>
             <Col lg="5">
-              <h2>Create album</h2>
               <Form onSubmit={createAlbum} encType="multipart/form-data">
                 <fieldset disabled={loading}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Upload your files (max 10)</Form.Label>
-                    <Form.Control
-                      id="fileInput"
-                      type="file"
-                      name="upload"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        if (e.target.files.length > 10) {
-                          e.preventDefault();
-                          e.target.value = null;
-                        } else {
-                          const previewArray = previewMapping(e.target.files);
-                          setPreviews(previewArray);
-                        }
-                      }}
+                  {uploadStep === "upload" && (
+                    <AlbumUpload
+                      previewMapping={previewMapping}
+                      setUploadStep={setUploadStep}
                     />
-                  </Form.Group>
-                  {albumAble && (
-                    <>
-                      <Form.Group className="mb-3">
-                        <Form.Check
-                          label="edit mode"
-                          onChange={(e) => {
-                            const { checked } = e.currentTarget;
-                            setEditMode(checked);
-                          }}
-                        />
-                      </Form.Group>
-                      <Button type="submit" variant="primary">
-                        Submit
-                      </Button>
-                    </>
+                  )}
+                  {editAble && (
+                    <AlbumEdit
+                      setEditMode={setEditMode}
+                      setUploadStep={setUploadStep}
+                      setPreviews={setPreviews}
+                    />
                   )}
                 </fieldset>
               </Form>
             </Col>
           </Row>
-
-          {albumAble && (
-            <>
-              <h2>Your gallery</h2>
-              <Carousel
-                variant="dark"
-                style={{ backgroundColor: "lightgrey" }}
-                activeIndex={index}
-                interval={null}
-                onSelect={(i) => {
-                  setIndex(i);
-                }}
-              >
-                {previews.map((file, n) => (
-                  <Carousel.Item key={file.order}>
-                    {file.completed ? (
-                      <div
-                        style={{
-                          color: "green",
-                          position: "absolute",
-                          right: "0",
-                        }}
-                      >
-                        &#x2705;
-                      </div>
-                    ) : (
-                      editMode && (
-                        <CloseButton
-                          style={{
-                            position: "absolute",
-                            right: "0",
-                            color: "red",
-                          }}
-                          size="lg"
-                          onClick={() => {
-                            deletePicture(file);
-                          }}
-                        />
-                      )
-                    )}
-                    <img src={file.blob} style={carouselImg} />
-                    {editMode && (
-                      <Carousel.Caption>
-                        <div style={carouselEditPanel}>
-                          <h2 style={{ wordWrap: "break-word" }}>
-                            {file.name}
-                          </h2>
-                          <p>
-                            Photo: {file.order} / {previews.length}
-                          </p>
-                          <Form.Group className="mb-3">
-                            <Form.Check
-                              checked={!file.closed}
-                              label="add text"
-                              onChange={(e) => {
-                                const { checked } = e.currentTarget;
-                                mutateCopy(!checked, file, "closed");
-                              }}
-                            />
-                          </Form.Group>
-                          <Form.Group className="mb-3">
-                            <Form.Control
-                              type="text"
-                              placeholder="A fancy title"
-                              name="title"
-                              value={file.text === null ? "" : file.text}
-                              disabled={file.closed}
-                              onChange={(e) => {
-                                const { value } = e.currentTarget;
-                                mutateCopy(value, file, "text");
-                              }}
-                            />
-                          </Form.Group>
-                          <div style={buttonRow}>
-                            <Button
-                              variant="primary"
-                              disabled={file.order === 1}
-                              onClick={() => {
-                                reOrder(file.order, "front");
-                              }}
-                            >
-                              Push forward
-                            </Button>
-                            <Button
-                              variant="primary"
-                              disabled={file.order === previews.length}
-                              onClick={() => {
-                                reOrder(file.order, "back");
-                              }}
-                            >
-                              Push backward
-                            </Button>
-                          </div>
-                        </div>
-                      </Carousel.Caption>
-                    )}
-                  </Carousel.Item>
-                ))}
-              </Carousel>
-            </>
+          {editAble && (
+            <UploadCarousel
+              setIndex={setIndex}
+              previews={previews}
+              deletePicture={deletePicture}
+              editMode={editMode}
+              mutateCopy={mutateCopy}
+              reOrder={reOrder}
+              index={index}
+            />
           )}
         </Container>
       )}
