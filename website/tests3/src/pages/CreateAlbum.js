@@ -7,6 +7,7 @@ import Container from "react-bootstrap/Container";
 import CloseButton from "react-bootstrap/CloseButton";
 
 import NotFound from "./NotFound";
+import { carouselEditPanel, carouselImg, buttonRow } from "../utils/styles";
 import { getSignedUrl } from "../utils/albumApi";
 
 import { globalContext } from "../App";
@@ -81,6 +82,22 @@ const CreateAlbum = () => {
     setPreviews(copy);
   };
 
+  const deletePicture = (file) => {
+    const copy = [...previews];
+    const filtered = copy.filter((item) => item.name !== file.name);
+    filtered.forEach((item, n) => (item.order = n + 1));
+    setPreviews(filtered);
+    const dt = new DataTransfer();
+    Array.from(previews).forEach((item) => {
+      if (item.name !== file.name) {
+        dt.items.add(item.file);
+      }
+    });
+    setIndex(0);
+    const input = document.getElementById("fileInput");
+    input.files = dt.files;
+  };
+
   const reOrder = (order, position) => {
     const found = previews.find((item) => item.order === order);
     const filtered = previews.filter((item) => item.order !== order);
@@ -152,7 +169,6 @@ const CreateAlbum = () => {
 
           {albumAble && (
             <>
-              {" "}
               <h2>Your gallery</h2>
               <Carousel
                 variant="dark"
@@ -185,49 +201,15 @@ const CreateAlbum = () => {
                           }}
                           size="lg"
                           onClick={() => {
-                            const copy = [...previews];
-                            const filtered = copy.filter(
-                              (item) => item.name !== file.name
-                            );
-                            filtered.forEach((item, n) => (item.order = n + 1));
-                            setPreviews(filtered);
-                            const dt = new DataTransfer();
-                            Array.from(previews).forEach((item) => {
-                              if (item.name !== file.name) {
-                                dt.items.add(item.file);
-                              }
-                            });
-                            setIndex(0);
-                            const input = document.getElementById("fileInput");
-                            input.files = dt.files;
+                            deletePicture(file);
                           }}
                         />
                       )
                     )}
-                    <img
-                      src={file.blob}
-                      style={{
-                        width: "auto",
-                        height: "50vw",
-                        marginLeft: "auto",
-                        marginRight: "auto",
-                        objectFit: "cover",
-                        display: "block",
-                      }}
-                    />
+                    <img src={file.blob} style={carouselImg} />
                     {editMode && (
                       <Carousel.Caption>
-                        <div
-                          style={{
-                            backgroundColor: "white",
-                            border: "1px solid black",
-                            width: "100%",
-                            margin: "auto",
-                            borderRadius: "10px",
-                            padding: "10px",
-                            textAlign: "start",
-                          }}
-                        >
+                        <div style={carouselEditPanel}>
                           <h2 style={{ wordWrap: "break-word" }}>
                             {file.name}
                           </h2>
@@ -257,13 +239,7 @@ const CreateAlbum = () => {
                               }}
                             />
                           </Form.Group>
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "row",
-                              justifyContent: "space-around",
-                            }}
-                          >
+                          <div style={buttonRow}>
                             <Button
                               variant="primary"
                               disabled={file.order === 1}
