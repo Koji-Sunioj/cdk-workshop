@@ -151,139 +151,145 @@ const CreateAlbum = () => {
           </Row>
 
           {albumAble && (
-            <Carousel
-              variant="dark"
-              style={{ backgroundColor: "lightgrey" }}
-              activeIndex={index}
-              interval={null}
-              onSelect={(i) => {
-                setIndex(i);
-              }}
-            >
-              {previews.map((file, n) => (
-                <Carousel.Item key={file.order}>
-                  {file.completed ? (
-                    <div
-                      style={{
-                        color: "green",
-                        position: "absolute",
-                        right: "0",
-                      }}
-                    >
-                      &#x2705;
-                    </div>
-                  ) : (
-                    editMode && (
-                      <CloseButton
-                        style={{
-                          position: "absolute",
-                          right: "0",
-                          color: "red",
-                        }}
-                        size="lg"
-                        onClick={() => {
-                          const copy = [...previews];
-                          const filtered = copy.filter(
-                            (item) => item.name !== file.name
-                          );
-                          filtered.forEach((item, n) => (item.order = n + 1));
-                          setPreviews(filtered);
-                          const dt = new DataTransfer();
-                          Array.from(previews).forEach((item) => {
-                            if (item.name !== file.name) {
-                              dt.items.add(item.file);
-                            }
-                          });
-                          setIndex(0);
-                          const input = document.getElementById("fileInput");
-                          input.files = dt.files;
-                        }}
-                      />
-                    )
-                  )}
-                  <img
-                    src={file.blob}
-                    style={{
-                      width: "auto",
-                      height: "50vw",
-                      marginLeft: "auto",
-                      marginRight: "auto",
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-                  {editMode && (
-                    <Carousel.Caption>
+            <>
+              {" "}
+              <h2>Your gallery</h2>
+              <Carousel
+                variant="dark"
+                style={{ backgroundColor: "lightgrey" }}
+                activeIndex={index}
+                interval={null}
+                onSelect={(i) => {
+                  setIndex(i);
+                }}
+              >
+                {previews.map((file, n) => (
+                  <Carousel.Item key={file.order}>
+                    {file.completed ? (
                       <div
                         style={{
-                          backgroundColor: "white",
-                          border: "1px solid black",
-                          width: "100%",
-                          margin: "auto",
-                          borderRadius: "10px",
-                          padding: "10px",
-                          textAlign: "start",
+                          color: "green",
+                          position: "absolute",
+                          right: "0",
                         }}
                       >
-                        <h2 style={{ wordWrap: "break-word" }}>{file.name}</h2>
-                        <p>
-                          Photo: {file.order} / {previews.length}
-                        </p>
-                        <Form.Group className="mb-3">
-                          <Form.Check
-                            checked={!file.closed}
-                            label="add text"
-                            onChange={(e) => {
-                              const { checked } = e.currentTarget;
-                              mutateCopy(!checked, file, "closed");
-                            }}
-                          />
-                        </Form.Group>
-                        <Form.Group className="mb-3">
-                          <Form.Control
-                            type="text"
-                            placeholder="A fancy title"
-                            name="title"
-                            value={file.text === null ? "" : file.text}
-                            disabled={file.closed}
-                            onChange={(e) => {
-                              const { value } = e.currentTarget;
-                              mutateCopy(value, file, "text");
-                            }}
-                          />
-                        </Form.Group>
+                        &#x2705;
+                      </div>
+                    ) : (
+                      editMode && (
+                        <CloseButton
+                          style={{
+                            position: "absolute",
+                            right: "0",
+                            color: "red",
+                          }}
+                          size="lg"
+                          onClick={() => {
+                            const copy = [...previews];
+                            const filtered = copy.filter(
+                              (item) => item.name !== file.name
+                            );
+                            filtered.forEach((item, n) => (item.order = n + 1));
+                            setPreviews(filtered);
+                            const dt = new DataTransfer();
+                            Array.from(previews).forEach((item) => {
+                              if (item.name !== file.name) {
+                                dt.items.add(item.file);
+                              }
+                            });
+                            setIndex(0);
+                            const input = document.getElementById("fileInput");
+                            input.files = dt.files;
+                          }}
+                        />
+                      )
+                    )}
+                    <img
+                      src={file.blob}
+                      style={{
+                        width: "auto",
+                        height: "50vw",
+                        marginLeft: "auto",
+                        marginRight: "auto",
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                    {editMode && (
+                      <Carousel.Caption>
                         <div
                           style={{
-                            display: "flex",
-                            flexDirection: "row",
-                            justifyContent: "space-around",
+                            backgroundColor: "white",
+                            border: "1px solid black",
+                            width: "100%",
+                            margin: "auto",
+                            borderRadius: "10px",
+                            padding: "10px",
+                            textAlign: "start",
                           }}
                         >
-                          <Button
-                            variant="primary"
-                            disabled={file.order === 1}
-                            onClick={() => {
-                              reOrder(file.order, "front");
+                          <h2 style={{ wordWrap: "break-word" }}>
+                            {file.name}
+                          </h2>
+                          <p>
+                            Photo: {file.order} / {previews.length}
+                          </p>
+                          <Form.Group className="mb-3">
+                            <Form.Check
+                              checked={!file.closed}
+                              label="add text"
+                              onChange={(e) => {
+                                const { checked } = e.currentTarget;
+                                mutateCopy(!checked, file, "closed");
+                              }}
+                            />
+                          </Form.Group>
+                          <Form.Group className="mb-3">
+                            <Form.Control
+                              type="text"
+                              placeholder="A fancy title"
+                              name="title"
+                              value={file.text === null ? "" : file.text}
+                              disabled={file.closed}
+                              onChange={(e) => {
+                                const { value } = e.currentTarget;
+                                mutateCopy(value, file, "text");
+                              }}
+                            />
+                          </Form.Group>
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "row",
+                              justifyContent: "space-around",
                             }}
                           >
-                            Push forward
-                          </Button>
-                          <Button
-                            variant="primary"
-                            disabled={file.order === previews.length}
-                            onClick={() => {
-                              reOrder(file.order, "back");
-                            }}
-                          >
-                            Push backward
-                          </Button>
+                            <Button
+                              variant="primary"
+                              disabled={file.order === 1}
+                              onClick={() => {
+                                reOrder(file.order, "front");
+                              }}
+                            >
+                              Push forward
+                            </Button>
+                            <Button
+                              variant="primary"
+                              disabled={file.order === previews.length}
+                              onClick={() => {
+                                reOrder(file.order, "back");
+                              }}
+                            >
+                              Push backward
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    </Carousel.Caption>
-                  )}
-                </Carousel.Item>
-              ))}
-            </Carousel>
+                      </Carousel.Caption>
+                    )}
+                  </Carousel.Item>
+                ))}
+              </Carousel>
+            </>
           )}
         </Container>
       )}
