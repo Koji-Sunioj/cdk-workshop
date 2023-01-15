@@ -23,7 +23,6 @@ exports.handler = async function (event, context) {
   switch (routeKey) {
     case "GET /albums":
       const { type } = await verifyToken(headers);
-      console.log(type);
       if (type === "user") {
         const { key, content_type } = queryStringParameters;
         let buckParams = {

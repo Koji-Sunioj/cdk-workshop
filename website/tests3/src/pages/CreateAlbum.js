@@ -7,8 +7,10 @@ import AlbumUpload from "../components/AlbumUpload";
 import AlbumEdit from "../components/AlbumEdit";
 import UploadCarousel from "../components/UploadCarousel";
 import NotFound from "./NotFound";
+
 import { getSignedUrl } from "../utils/albumApi";
 
+import uuid from "react-uuid";
 import { globalContext } from "../App";
 import { useState, useContext } from "react";
 
@@ -21,6 +23,7 @@ const CreateAlbum = () => {
   const [loading, setLoading] = useState(false);
 
   const createAlbum = async (event) => {
+    const albumId = uuid();
     setLoading(true);
     event.preventDefault();
     const { AccessToken } = login;
@@ -29,8 +32,9 @@ const CreateAlbum = () => {
     const responses = await Promise.all(
       previews.map(async (item) => {
         const { name, type, file, text, order } = item;
+        const newPath = `${albumId}/${name}`;
         const { url } = await getSignedUrl({
-          name: name,
+          name: newPath,
           type: type,
           token: AccessToken,
         });
@@ -52,6 +56,7 @@ const CreateAlbum = () => {
         photos: dynamoData,
       };
     }
+    console.log(dynamoAlbum);
     setLoading(false);
   };
 
