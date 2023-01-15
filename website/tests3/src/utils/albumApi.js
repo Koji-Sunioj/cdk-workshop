@@ -20,3 +20,10 @@ export const newAlbum = async (albumToken) => {
   }).then((response) => response.status);
   return statusCode;
 };
+
+export const getAlbums = async () => {
+  const albums = await fetch(AlbumUrl, { method: "GET" }).then((response) =>
+    response.json()
+  );
+  return albums;
+};

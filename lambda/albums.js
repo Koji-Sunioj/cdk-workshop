@@ -42,6 +42,8 @@ exports.handler = async function (event, context) {
       returnObject;
       break;
     case "GET /albums":
+      const { Items: albums } = await docClient.scan(dbParams).promise();
+      returnObject = { albums: albums };
       break;
     case "POST /albums":
       ({ type } = await verifyToken(headers));
