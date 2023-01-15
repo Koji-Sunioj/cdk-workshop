@@ -4,7 +4,6 @@ import Form from "react-bootstrap/Form";
 import Carousel from "react-bootstrap/Carousel";
 import Button from "react-bootstrap/esm/Button";
 import Container from "react-bootstrap/Container";
-import InputGroup from "react-bootstrap/InputGroup";
 import CloseButton from "react-bootstrap/CloseButton";
 
 import NotFound from "./NotFound";
@@ -84,16 +83,23 @@ const CreateAlbum = () => {
     setPreviews(copy);
   };
 
-  const reOrder = (order) => {
+  const reOrder = (order, position) => {
     const found = previews.find((item) => item.order === order);
     const filtered = previews.filter((item) => item.order !== order);
-    filtered.splice(0, 0, found);
+    const trueIndex = found.order - 1;
+    let sideStep = position === "front" ? trueIndex - 1 : trueIndex + 1;
+
+    position === "front"
+      ? filtered.splice(sideStep, 0, found)
+      : filtered.splice(sideStep, 0, found);
+
     filtered.forEach((item, n) => (item.order = n + 1));
+    setIndex(sideStep);
     setPreviews(filtered);
-    setIndex(0);
   };
 
   previews.sort((a, b) => (a.order > b.order ? 1 : b.order > a.order ? -1 : 0));
+  console.log(previews);
 
   return (
     <>
@@ -137,7 +143,6 @@ const CreateAlbum = () => {
 
           {albumAble && (
             <Carousel
-              slide={false}
               variant="dark"
               style={{ backgroundColor: "lightgrey" }}
               activeIndex={index}
@@ -152,6 +157,7 @@ const CreateAlbum = () => {
                     <div style={{ color: "green" }}>&#x2705;</div>
                   ) : (
                     <CloseButton
+                      style={{ position: "absolute", right: "0", color: "red" }}
                       size="lg"
                       onClick={() => {
                         const copy = [...previews];
@@ -183,40 +189,72 @@ const CreateAlbum = () => {
                       display: "block",
                     }}
                   />
-                  {file.order}
                   <Carousel.Caption>
-                    <InputGroup className="mb-3" size="lg">
-                      <Button
+                    <div
+                      style={{
+                        backgroundColor: "white",
+                        border: "1px solid black",
+                        width: "50%",
+                        margin: "auto",
+                        borderRadius: "10px",
+                        padding: "10px",
+                        textAlign: "start",
+                      }}
+                    >
+                      <h2 style={{ wordWrap: "break-word" }}>{file.name}</h2>
+                      <p>
+                        Photo: {file.order} / {previews.length}
+                      </p>
+                      <Form.Group className="mb-3">
+                        <Form.Check
+                          checked={!file.closed}
+                          label="add text"
+                          onChange={(e) => {
+                            const { checked } = e.currentTarget;
+                            mutateCopy(!checked, file, "closed");
+                          }}
+                        />
+                      </Form.Group>
+                      <Form.Group className="mb-3">
+                        <Form.Control
+                          type="text"
+                          placeholder="A fancy title"
+                          name="title"
+                          value={file.text === null ? "" : file.text}
+                          disabled={file.closed}
+                          onChange={(e) => {
+                            const { value } = e.currentTarget;
+                            mutateCopy(value, file, "text");
+                          }}
+                        />
+                      </Form.Group>
+                      <div
                         style={{
-                          backgroundColor: "#e9ecef",
-                          color: "black",
-                          border: "1px solid #ced4da",
-                        }}
-                        disabled={file.order === 1}
-                        onClick={() => {
-                          reOrder(file.order);
+                          display: "flex",
+                          flexDirection: "row",
+                          justifyContent: "space-around",
                         }}
                       >
-                        {file.order === 1 ? "cover" : "push front"}
-                      </Button>
-                      <InputGroup.Checkbox
-                        onChange={(e) => {
-                          const { checked } = e.currentTarget;
-                          mutateCopy(!checked, file, "closed");
-                        }}
-                      />
-                      <Form.Control
-                        type="text"
-                        placeholder="A fancy title"
-                        name="title"
-                        value={file.text === null ? "" : file.text}
-                        disabled={file.closed}
-                        onChange={(e) => {
-                          const { value } = e.currentTarget;
-                          mutateCopy(value, file, "text");
-                        }}
-                      />
-                    </InputGroup>
+                        <Button
+                          variant="primary"
+                          disabled={file.order === 1}
+                          onClick={() => {
+                            reOrder(file.order, "front");
+                          }}
+                        >
+                          Push forward
+                        </Button>
+                        <Button
+                          variant="primary"
+                          disabled={file.order === previews.length}
+                          onClick={() => {
+                            reOrder(file.order, "back");
+                          }}
+                        >
+                          Push backward
+                        </Button>
+                      </div>
+                    </div>
                   </Carousel.Caption>
                 </Carousel.Item>
               ))}
