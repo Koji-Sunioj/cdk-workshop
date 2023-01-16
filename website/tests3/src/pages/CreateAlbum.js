@@ -5,21 +5,25 @@ import Container from "react-bootstrap/Container";
 
 import NotFound from "./NotFound";
 import AlbumEdit from "../components/AlbumEdit";
+import AlbumSubmit from "../components/AlbumSubmit";
 import AlbumUpload from "../components/AlbumUpload";
 import UploadCarousel from "../components/UploadCarousel";
 import { getSignedUrl, newAlbum } from "../utils/albumApi";
 
 import uuid from "react-uuid";
+
 import { globalContext } from "../App";
-import { useState, useContext } from "react";
+import { useState, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const CreateAlbum = () => {
   const navigate = useNavigate();
+  const formRef = useRef();
   const [index, setIndex] = useState(0);
   const [uploadStep, setUploadStep] = useState("upload");
   const [editMode, setEditMode] = useState(false);
   const [login] = useContext(globalContext);
+  const [tags, setTags] = useState([]);
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -64,6 +68,7 @@ const CreateAlbum = () => {
         albumId: albumId,
         title: title,
         userName: userName,
+        tags: tags,
       };
       const statusCode = await newAlbum({
         token: AccessToken,
@@ -139,6 +144,7 @@ const CreateAlbum = () => {
 
   previews.sort((a, b) => (a.order > b.order ? 1 : b.order > a.order ? -1 : 0));
   const editAble = previews.length > 0 && uploadStep === "edit";
+  const submitAble = previews.length > 0 && uploadStep === "submit";
 
   return (
     <>
@@ -148,7 +154,11 @@ const CreateAlbum = () => {
         <Container>
           <Row>
             <Col lg="5">
-              <Form onSubmit={createAlbum} encType="multipart/form-data">
+              <Form
+                onSubmit={createAlbum}
+                encType="multipart/form-data"
+                ref={formRef}
+              >
                 <fieldset disabled={loading}>
                   {uploadStep === "upload" && (
                     <AlbumUpload
@@ -161,6 +171,14 @@ const CreateAlbum = () => {
                       setEditMode={setEditMode}
                       setUploadStep={setUploadStep}
                       setPreviews={setPreviews}
+                    />
+                  )}
+                  {submitAble && (
+                    <AlbumSubmit
+                      formRef={formRef}
+                      setUploadStep={setUploadStep}
+                      tags={tags}
+                      setTags={setTags}
                     />
                   )}
                 </fieldset>

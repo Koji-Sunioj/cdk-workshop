@@ -21,8 +21,6 @@ const Albums = () => {
 
   const shouldRender = albums !== null && albums.length > 0;
 
-  console.log(albums);
-
   return (
     <>
       <Container>
@@ -31,8 +29,11 @@ const Albums = () => {
             const photos = album.photos.sort((a, b) =>
               a.order > b.order ? 1 : b.order > a.order ? -1 : 0
             );
-            const currentZone = new Date(album.created).toDateString();
             const shouldControl = photos.length === 1;
+            const now = Date.now();
+            const currentZone = new Date(album.created);
+            const hours = Math.ceil(Math.abs(currentZone - now) / 36e5);
+            const agoText = hours === 1 ? "hour" : "hours";
 
             return (
               <div style={{ border: "1px solid black" }}>
@@ -74,7 +75,9 @@ const Albums = () => {
 
                 <Collapse in={album.expand}>
                   <div id="example-collapse-text">
-                    <p> {currentZone}</p>
+                    <p>
+                      {hours} {agoText} ago
+                    </p>
                   </div>
                 </Collapse>
               </div>

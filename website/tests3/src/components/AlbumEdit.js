@@ -6,9 +6,6 @@ const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
     <>
       <h2>Your gallery</h2>
       <Form.Group className="mb-3">
-        <Form.Control type="text" placeholder="Album title" name="title" />
-      </Form.Group>
-      <Form.Group className="mb-3">
         <Form.Check
           label="edit mode"
           onChange={(e) => {
@@ -26,8 +23,13 @@ const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
           gap: "10px",
         }}
       >
-        <Button type="submit" variant="primary">
-          Submit
+        <Button
+          variant="primary"
+          onClick={() => {
+            setUploadStep("submit");
+          }}
+        >
+          Next
         </Button>
         <Button
           variant="primary"
