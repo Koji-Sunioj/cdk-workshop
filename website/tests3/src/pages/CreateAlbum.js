@@ -3,17 +3,16 @@ import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/Container";
 
-import AlbumUpload from "../components/AlbumUpload";
-import AlbumEdit from "../components/AlbumEdit";
-import UploadCarousel from "../components/UploadCarousel";
 import NotFound from "./NotFound";
-
+import AlbumEdit from "../components/AlbumEdit";
+import AlbumUpload from "../components/AlbumUpload";
+import UploadCarousel from "../components/UploadCarousel";
 import { getSignedUrl, newAlbum } from "../utils/albumApi";
 
 import uuid from "react-uuid";
-import { useNavigate } from "react-router-dom";
 import { globalContext } from "../App";
 import { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 
 const CreateAlbum = () => {
   const navigate = useNavigate();
@@ -25,6 +24,9 @@ const CreateAlbum = () => {
   const [loading, setLoading] = useState(false);
 
   const createAlbum = async (event) => {
+    const {
+      title: { value: title },
+    } = event.currentTarget;
     event.preventDefault();
     setLoading(true);
 
@@ -60,6 +62,7 @@ const CreateAlbum = () => {
       dynamoAlbum = {
         photos: dynamoData,
         albumId: albumId,
+        title: title,
         userName: userName,
       };
       const statusCode = await newAlbum({

@@ -1,20 +1,21 @@
-import { useContext, useState } from "react";
-import { Link } from "react-router-dom";
-import { globalContext } from "../App";
-
-import { getAlbums } from "../utils/albumApi";
-
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import Collapse from "react-bootstrap/Collapse";
+import Carousel from "react-bootstrap/Carousel";
 import Container from "react-bootstrap/Container";
 
+import { useState } from "react";
+
+import { getAlbums } from "../utils/albumApi";
+import { carouselImg } from "../utils/styles";
+
 const Albums = () => {
-  const [login] = useContext(globalContext);
   const [albums, setAlbums] = useState(null);
 
   albums === null &&
     (async () => {
       const { albums } = await getAlbums();
+      albums.forEach((album) => {
+        album.expand = false;
+      });
       setAlbums(albums);
     })();
 
@@ -25,29 +26,58 @@ const Albums = () => {
   return (
     <>
       <Container>
-        <Row>
-          <Col>
-            <h2>Browse Photo Albums</h2>
-            {login !== null && (
-              <Link to={"/create-album"}>Create a new photo album</Link>
-            )}
-          </Col>
-        </Row>
         {shouldRender &&
           albums.map((album) => {
-            const cover = album.photos.find((photo) => photo.order === 1);
+            const photos = album.photos.sort((a, b) =>
+              a.order > b.order ? 1 : b.order > a.order ? -1 : 0
+            );
             const currentZone = new Date(album.created).toDateString();
-            console.log(currentZone);
+            const shouldControl = photos.length === 1;
 
             return (
-              <Row style={{ width: "18rem" }} key={album.albumId}>
-                <Col>
-                  <p> {currentZone}</p>
-                  <p>{album.userName}</p>
-                  <img src={cover.url} />
-                  {cover.text !== null && <p>{cover.text}</p>}
-                </Col>
-              </Row>
+              <div style={{ border: "1px solid black" }}>
+                <Carousel
+                  style={{ backgroundColor: "black" }}
+                  interval={null}
+                  controls={!shouldControl}
+                  indicators={!shouldControl}
+                >
+                  {photos.map((photo) => (
+                    <Carousel.Item>
+                      <img
+                        src={photo.url}
+                        style={carouselImg}
+                        className="carousel-img"
+                      />
+                      <Carousel.Caption>
+                        <p>{photo.text}</p>
+                      </Carousel.Caption>
+                    </Carousel.Item>
+                  ))}
+                </Carousel>
+                <h3>
+                  <strong
+                    onClick={() => {
+                      const copy = [...albums];
+                      const index = copy.findIndex(
+                        (item) => item.albumId === album.albumId
+                      );
+                      console.log(copy[index]);
+                      copy[index]["expand"] = !copy[index]["expand"];
+                      setAlbums(copy);
+                    }}
+                  >
+                    {album.userName}
+                  </strong>
+                  {album.title}
+                </h3>
+
+                <Collapse in={album.expand}>
+                  <div id="example-collapse-text">
+                    <p> {currentZone}</p>
+                  </div>
+                </Collapse>
+              </div>
             );
           })}
       </Container>

@@ -6,6 +6,9 @@ const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
     <>
       <h2>Your gallery</h2>
       <Form.Group className="mb-3">
+        <Form.Control type="text" placeholder="Album title" name="title" />
+      </Form.Group>
+      <Form.Group className="mb-3">
         <Form.Check
           label="edit mode"
           onChange={(e) => {

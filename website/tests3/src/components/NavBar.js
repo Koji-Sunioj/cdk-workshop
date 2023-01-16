@@ -28,9 +28,14 @@ function NavBar() {
                 Pricing
               </Nav.Link>
               {login !== null ? (
-                <Nav.Link as={Link} to="/account">
-                  My Account
-                </Nav.Link>
+                <>
+                  <Nav.Link as={Link} to="/account">
+                    My Account
+                  </Nav.Link>
+                  <Nav.Link as={Link} to="/create-album">
+                    Create album
+                  </Nav.Link>
+                </>
               ) : (
                 <Nav.Link as={Link} to="/sign-in">
                   Sign In
