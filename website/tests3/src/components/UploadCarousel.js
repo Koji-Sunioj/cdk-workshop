@@ -23,20 +23,12 @@ const UploadCarousel = ({
         setIndex(i);
       }}
     >
-      {previews.map((file, n) => (
-        <Carousel.Item key={file.order}>
-          {file.completed ? (
-            <div
-              style={{
-                color: "green",
-                position: "absolute",
-                right: "0",
-              }}
-            >
-              &#x2705;
-            </div>
-          ) : (
-            editMode && (
+      {previews.map((file, n) => {
+        const { order, blob, text, name, closed } = file;
+
+        return (
+          <Carousel.Item key={order}>
+            {editMode && (
               <CloseButton
                 style={{
                   position: "absolute",
@@ -48,73 +40,73 @@ const UploadCarousel = ({
                   deletePicture(file);
                 }}
               />
-            )
-          )}
-          <img src={file.blob} style={carouselImg} className="carousel-img" />
-          {!editMode && file.text !== null && (
-            <Carousel.Caption>
-              <h3>{file.text}</h3>
-            </Carousel.Caption>
-          )}
-          {editMode && (
-            <Carousel.Caption>
-              <div style={carouselEditPanel}>
-                <p className="carousel-p" title={file.name}>
-                  File: {file.name}
-                </p>
-                <p>
-                  Photo: {file.order} / {previews.length}
-                </p>
-                <Form.Group className="mb-3">
-                  <Form.Check
-                    checked={!file.closed}
-                    label="add text"
-                    onChange={(e) => {
-                      const { checked } = e.currentTarget;
-                      mutateCopy(!checked, file, "closed");
-                    }}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Control
-                    type="text"
-                    placeholder="A fancy title"
-                    name="title"
-                    value={file.text === null ? "" : file.text}
-                    disabled={file.closed}
-                    onChange={(e) => {
-                      const { value } = e.currentTarget;
-                      mutateCopy(value, file, "text");
-                    }}
-                  />
-                </Form.Group>
-                <div style={buttonRow}>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={file.order === 1}
-                    onClick={() => {
-                      reOrder(file.order, "front");
-                    }}
-                  >
-                    Push forward
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    disabled={file.order === previews.length}
-                    onClick={() => {
-                      reOrder(file.order, "back");
-                    }}
-                  >
-                    Push backward
-                  </Button>
+            )}
+            <img src={blob} style={carouselImg} className="carousel-img" />
+            {!editMode && text !== null && (
+              <Carousel.Caption>
+                <h3>{file.text}</h3>
+              </Carousel.Caption>
+            )}
+            {editMode && (
+              <Carousel.Caption>
+                <div style={carouselEditPanel}>
+                  <p className="carousel-p" title={name}>
+                    File: {name}
+                  </p>
+                  <p>
+                    Photo: {order} / {previews.length}
+                  </p>
+                  <Form.Group className="mb-3">
+                    <Form.Check
+                      checked={!closed}
+                      label="add text"
+                      onChange={(e) => {
+                        const { checked } = e.currentTarget;
+                        mutateCopy(!checked, file, "closed");
+                      }}
+                    />
+                  </Form.Group>
+                  <Form.Group className="mb-3">
+                    <Form.Control
+                      type="text"
+                      placeholder="A fancy title"
+                      name="title"
+                      value={text === null ? "" : text}
+                      disabled={closed}
+                      onChange={(e) => {
+                        const { value } = e.currentTarget;
+                        mutateCopy(value, file, "text");
+                      }}
+                    />
+                  </Form.Group>
+                  <div style={buttonRow}>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={file.order === 1}
+                      onClick={() => {
+                        reOrder(order, "front");
+                      }}
+                    >
+                      Push forward
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      disabled={file.order === previews.length}
+                      onClick={() => {
+                        reOrder(order, "back");
+                      }}
+                    >
+                      Push backward
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Carousel.Caption>
-          )}
-        </Carousel.Item>
-      ))}
+              </Carousel.Caption>
+            )}
+          </Carousel.Item>
+        );
+      })}
     </Carousel>
   );
 };

@@ -1,4 +1,5 @@
 import Form from "react-bootstrap/Form";
+import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/esm/Button";
 
 const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
@@ -14,15 +15,7 @@ const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
           }}
         />
       </Form.Group>
-      <div
-        className="mb-3"
-        style={{
-          paddingTop: "10px",
-          display: "flex",
-          flexDirection: "row",
-          gap: "10px",
-        }}
-      >
+      <Stack gap={3} direction="horizontal" className="mb-3">
         <Button
           variant="primary"
           onClick={() => {
@@ -41,7 +34,7 @@ const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
         >
           Start over
         </Button>
-      </div>
+      </Stack>
     </>
   );
 };

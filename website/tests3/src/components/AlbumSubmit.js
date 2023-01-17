@@ -1,13 +1,17 @@
 import Form from "react-bootstrap/Form";
+import Stack from "react-bootstrap/Stack";
+import Alert from "react-bootstrap/Alert";
 import Button from "react-bootstrap/esm/Button";
 import InputGroup from "react-bootstrap/InputGroup";
-import Stack from "react-bootstrap/Stack";
 
-import { useRef } from "react";
+import { postStatePointer } from "../utils/pointers";
 
-const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef }) => {
+import { useRef, useState } from "react";
+
+const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef, postState }) => {
   const tagRef = useRef();
-
+  const titleRef = useRef();
+  const [alertState, setAlertState] = useState(false);
   const pushTag = (tag) => {
     if (tag.length > 0 && !tags.includes(tag)) {
       const tagCopy = [...tags];
@@ -17,6 +21,12 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef }) => {
     }
   };
 
+  let message, variant, shouldAlert;
+  if (postState !== "idle") {
+    ({ message, variant } = postStatePointer[postState]);
+    shouldAlert = true;
+  }
+
   return (
     <>
       <h2>Your gallery</h2>
@@ -25,12 +35,17 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef }) => {
           type="text"
           placeholder="Album title"
           name="title"
-          required
+          ref={titleRef}
           onKeyPress={(e) => {
-            if (e.key === "Enter") {
+            const shouldSubmit =
+              e.key === "Enter" && e.currentTarget.value.length > 0;
+            if (shouldSubmit) {
+              setAlertState(false);
               formRef.current.dispatchEvent(
                 new Event("submit", { cancelable: true, bubbles: true })
               );
+            } else {
+              setAlertState(true);
             }
           }}
         />
@@ -62,23 +77,19 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef }) => {
           }}
         />
       </InputGroup>
-
-      <div
-        className="mb-3"
-        style={{
-          paddingTop: "10px",
-          display: "flex",
-          flexDirection: "row",
-          gap: "10px",
-        }}
-      >
+      <Stack gap={3} direction="horizontal" className="mb-3">
         <Button
           variant="primary"
-          onClick={() =>
-            formRef.current.dispatchEvent(
-              new Event("submit", { cancelable: true, bubbles: true })
-            )
-          }
+          onClick={() => {
+            if (titleRef.current.value.length > 0) {
+              setAlertState(false);
+              formRef.current.dispatchEvent(
+                new Event("submit", { cancelable: true, bubbles: true })
+              );
+            } else {
+              setAlertState(true);
+            }
+          }}
         >
           Submit
         </Button>
@@ -90,21 +101,35 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef }) => {
         >
           Go back
         </Button>
-      </div>
-      {tags.length > 0 && <p>Your tags:</p>}
-      <Stack direction="horizontal" gap={3}>
-        {tags.map((tag) => (
-          <Button
-            variant="info"
-            onClick={() => {
-              const filtered = tags.filter((item) => item !== tag);
-              setTags(filtered);
-            }}
-          >
-            {tag}
-          </Button>
-        ))}
       </Stack>
+      {tags.length > 0 && (
+        <div className="mb-3">
+          <p>Your tags:</p>
+          <Stack direction="horizontal" gap={3} clasName="mb-3">
+            {tags.map((tag) => (
+              <Button
+                variant="info"
+                onClick={() => {
+                  const filtered = tags.filter((item) => item !== tag);
+                  setTags(filtered);
+                }}
+              >
+                {tag}
+              </Button>
+            ))}
+          </Stack>
+        </div>
+      )}
+      {shouldAlert && <Alert variant={variant}>{message}</Alert>}
+      {alertState && (
+        <Alert
+          variant="danger"
+          dismissible
+          onClose={() => setAlertState(false)}
+        >
+          Input a title plz
+        </Alert>
+      )}
     </>
   );
 };

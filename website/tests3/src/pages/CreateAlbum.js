@@ -25,14 +25,14 @@ const CreateAlbum = () => {
   const [login] = useContext(globalContext);
   const [tags, setTags] = useState([]);
   const [previews, setPreviews] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [postState, setPostState] = useState("idle");
 
   const createAlbum = async (event) => {
     const {
       title: { value: title },
     } = event.currentTarget;
     event.preventDefault();
-    setLoading(true);
+    setPostState("posting");
 
     const albumId = uuid();
     const { AccessToken, userName } = login;
@@ -58,7 +58,6 @@ const CreateAlbum = () => {
           text: text,
           order: order,
         });
-        mutateCopy(response.ok, file, "completed");
         return response.ok;
       })
     );
@@ -76,22 +75,20 @@ const CreateAlbum = () => {
       });
       switch (statusCode) {
         case 200:
-          alert("successfully created album");
-          navigate("/albums");
+          setPostState("posted");
+          setTimeout(() => {
+            navigate("/albums");
+          }, 1500);
           break;
         default:
-          alert("there was an error");
+          setPostState("error");
       }
     }
-
-    setLoading(false);
   };
 
   const previewMapping = (files) => {
-    const temp = [];
-    Array.from(files).forEach((file, i) => {
-      temp.push({
-        completed: false,
+    const temp = Array.from(files).map((file, i) => {
+      const preview = {
         name: file.name,
         type: file.type,
         file: file,
@@ -99,7 +96,8 @@ const CreateAlbum = () => {
         closed: true,
         text: null,
         order: i + 1,
-      });
+      };
+      return preview;
     });
     setPreviews(temp);
   };
@@ -159,7 +157,9 @@ const CreateAlbum = () => {
                 encType="multipart/form-data"
                 ref={formRef}
               >
-                <fieldset disabled={loading}>
+                <fieldset
+                  disabled={postState === "posting" || postState === "posted"}
+                >
                   {uploadStep === "upload" && (
                     <AlbumUpload
                       previewMapping={previewMapping}
@@ -179,6 +179,7 @@ const CreateAlbum = () => {
                       setUploadStep={setUploadStep}
                       tags={tags}
                       setTags={setTags}
+                      postState={postState}
                     />
                   )}
                 </fieldset>
