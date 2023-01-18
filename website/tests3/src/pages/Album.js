@@ -118,9 +118,6 @@ const Album = () => {
                 >
                   Delete Album
                 </Button>
-                <Button variant="primary" disabled={loading}>
-                  Edit Album
-                </Button>
               </Stack>
               {deleteState === "deleting" && (
                 <Alert variant="info">Deleting</Alert>
@@ -146,48 +143,3 @@ const Album = () => {
 };
 
 export default Album;
-
-/*<div style={{ border: "1px solid black" }}>
-                <Carousel
-                  style={{ backgroundColor: "black" }}
-                  interval={null}
-                  controls={!shouldControl}
-                  indicators={!shouldControl}
-                >
-                  {photos.map((photo) => (
-                    <Carousel.Item>
-                      <img
-                        src={photo.url}
-                        style={carouselImg}
-                        className="carousel-img"
-                      />
-                      <Carousel.Caption>
-                        <p>{photo.text}</p>
-                      </Carousel.Caption>
-                    </Carousel.Item>
-                  ))}
-                </Carousel>
-                <h3>
-                  <strong
-                    onClick={() => {
-                      const copy = [...albums];
-                      const index = copy.findIndex(
-                        (item) => item.albumId === album.albumId
-                      );
-                      copy[index]["expand"] = !copy[index]["expand"];
-                      setAlbums(copy);
-                    }}
-                  >
-                    {album.userName}
-                  </strong>
-                  {album.title}
-                </h3>
-
-                <Collapse in={album.expand}>
-                  <div id="example-collapse-text">
-                    <p>
-                      {hours} {agoText} ago
-                    </p>
-                  </div>
-                </Collapse>
-              </div>*/
