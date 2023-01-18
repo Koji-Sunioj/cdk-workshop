@@ -99,6 +99,13 @@ const EditAlbum = () => {
     console.log("reoder");
   };
 
+  const startOver = () => {
+    setEditStep("upload");
+    const filtered = previews.filter((preview) => preview.type === "s3Object");
+    setPreviews(filtered);
+    setEditMode(false);
+  };
+
   const shouldError = previews !== null && previews.length === 0;
   const shouldRender =
     previews !== null && previews.length > 0 && login !== null;
@@ -122,7 +129,7 @@ const EditAlbum = () => {
                   <AlbumEdit
                     setEditMode={setEditMode}
                     setUploadStep={setEditStep}
-                    setPreviews={setPreviews}
+                    startOver={startOver}
                   />
                 )}
               </fieldset>

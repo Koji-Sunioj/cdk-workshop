@@ -2,7 +2,7 @@ import Form from "react-bootstrap/Form";
 import Stack from "react-bootstrap/Stack";
 import Button from "react-bootstrap/esm/Button";
 
-const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
+const AlbumEdit = ({ setEditMode, setUploadStep, startOver }) => {
   return (
     <>
       <h2>Your gallery</h2>
@@ -24,14 +24,7 @@ const AlbumEdit = ({ setEditMode, setUploadStep, setPreviews }) => {
         >
           Next
         </Button>
-        <Button
-          variant="primary"
-          onClick={() => {
-            setPreviews([]);
-            setUploadStep("upload");
-            setEditMode(false);
-          }}
-        >
+        <Button variant="primary" onClick={startOver}>
           Start over
         </Button>
       </Stack>

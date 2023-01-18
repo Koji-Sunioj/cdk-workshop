@@ -149,6 +149,12 @@ const CreateAlbum = () => {
     setPreviews(filtered);
   };
 
+  const startOver = () => {
+    setPreviews([]);
+    setUploadStep("upload");
+    setEditMode(false);
+  };
+
   previews.sort((a, b) => (a.order > b.order ? 1 : b.order > a.order ? -1 : 0));
   const editAble = previews.length > 0 && uploadStep === "edit";
   const submitAble = previews.length > 0 && uploadStep === "submit";
@@ -174,9 +180,9 @@ const CreateAlbum = () => {
                   )}
                   {editAble && (
                     <AlbumEdit
+                      startOver={startOver}
                       setEditMode={setEditMode}
                       setUploadStep={setUploadStep}
-                      setPreviews={setPreviews}
                     />
                   )}
                   {submitAble && (
