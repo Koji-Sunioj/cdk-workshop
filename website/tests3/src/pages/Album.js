@@ -13,7 +13,7 @@ import { deleteAlbum, getAlbum } from "../utils/albumApi";
 import CarouselSkeleton from "../components/CarouselSkeleton";
 
 import moment from "moment";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
 
 const Album = () => {
@@ -118,6 +118,12 @@ const Album = () => {
                 >
                   Delete Album
                 </Button>
+                <Link
+                  to={`/albums/edit/${album.albumId}`}
+                  state={{ album: album }}
+                >
+                  <Button variant="primary">Edit Album</Button>
+                </Link>
               </Stack>
               {deleteState === "deleting" && (
                 <Alert variant="info">Deleting</Alert>

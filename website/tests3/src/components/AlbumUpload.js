@@ -1,9 +1,13 @@
 import Form from "react-bootstrap/Form";
 
-const AlbumUpload = ({ previewMapping, setUploadStep }) => {
+const AlbumUpload = ({
+  previewMapping,
+  defaultTitle = "Create album",
+  subtitle = null,
+}) => {
   return (
     <>
-      <h2>Create album</h2>
+      <h2>{defaultTitle}</h2>
       <Form.Group className="mb-3">
         <Form.Label>Upload your files (max 10)</Form.Label>
         <Form.Control
@@ -12,16 +16,11 @@ const AlbumUpload = ({ previewMapping, setUploadStep }) => {
           name="upload"
           accept="image/*"
           multiple
-          onChange={(e) => {
-            if (e.target.files.length > 10) {
-              e.preventDefault();
-              e.target.value = null;
-            } else {
-              previewMapping(e.target.files);
-              setUploadStep("edit");
-            }
-          }}
+          onChange={previewMapping}
         />
+        {subtitle !== null && (
+          <Form.Text className="text-muted">{subtitle}</Form.Text>
+        )}
       </Form.Group>
     </>
   );

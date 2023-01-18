@@ -86,20 +86,29 @@ const CreateAlbum = () => {
     }
   };
 
-  const previewMapping = (files) => {
-    const temp = Array.from(files).map((file, i) => {
-      const preview = {
-        name: file.name,
-        type: file.type,
-        file: file,
-        blob: URL.createObjectURL(file),
-        closed: true,
-        text: null,
-        order: i + 1,
-      };
-      return preview;
-    });
-    setPreviews(temp);
+  const previewMapping = (event) => {
+    const {
+      target: { files },
+    } = event;
+    if (files.length > 10) {
+      event.preventDefault();
+      event.target.value = null;
+    } else {
+      const temp = Array.from(files).map((file, i) => {
+        const preview = {
+          name: file.name,
+          type: file.type,
+          file: file,
+          blob: URL.createObjectURL(file),
+          closed: true,
+          text: null,
+          order: i + 1,
+        };
+        return preview;
+      });
+      setPreviews(temp);
+      setUploadStep("edit");
+    }
   };
 
   const mutateCopy = (newValue, file, attribute) => {
@@ -161,10 +170,7 @@ const CreateAlbum = () => {
                   disabled={postState === "posting" || postState === "posted"}
                 >
                   {uploadStep === "upload" && (
-                    <AlbumUpload
-                      previewMapping={previewMapping}
-                      setUploadStep={setUploadStep}
-                    />
+                    <AlbumUpload previewMapping={previewMapping} />
                   )}
                   {editAble && (
                     <AlbumEdit

@@ -30,6 +30,7 @@ const UploadCarousel = ({
           <Carousel.Item key={order}>
             {editMode && (
               <CloseButton
+                variant="white"
                 style={{
                   position: "absolute",
                   right: "0",

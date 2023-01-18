@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
 import CreateAlbum from "./pages/CreateAlbum";
+import EditAlbum from "./pages/EditAlbums";
 
 import { verifiyToken } from "./utils/signUpApi";
 
@@ -46,6 +47,7 @@ function App() {
         <br />
         <Routes>
           <Route path="/albums/:albumId" element={<Album />} />
+          <Route path="/albums/edit/:albumId" element={<EditAlbum />} />
           <Route path="/albums" element={<Albums />} />
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
