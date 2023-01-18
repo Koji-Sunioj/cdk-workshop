@@ -27,3 +27,19 @@ export const getAlbums = async () => {
   );
   return albums;
 };
+
+export const getAlbum = async (albumId) => {
+  const album = await fetch(`${AlbumUrl}${albumId}`, { method: "GET" }).then(
+    (response) => response.json()
+  );
+  return album;
+};
+
+export const deleteAlbum = async (albumIdToken) => {
+  const { albumId, token } = albumIdToken;
+  const statusCode = await fetch(`${AlbumUrl}${albumId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((response) => response.status);
+  return statusCode;
+};

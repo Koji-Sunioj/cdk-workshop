@@ -21,3 +21,9 @@ export const buttonRow = {
   flexDirection: "row",
   justifyContent: "space-around",
 };
+
+export const filler = {
+  backgroundColor: "lightgrey",
+  width: "20vw",
+  borderRadius: "10px",
+};

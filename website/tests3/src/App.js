@@ -1,13 +1,12 @@
 import { createContext, useState } from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 
-import Prices from "./pages/Prices";
+import Album from "./pages/Album";
 import Albums from "./pages/Albums";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import Account from "./pages/Account";
 import ForgotPw from "./pages/ForgotPw";
-import Features from "./pages/Features";
 import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
@@ -46,11 +45,10 @@ function App() {
         <NavBar />
         <br />
         <Routes>
+          <Route path="/albums/:albumId" element={<Album />} />
           <Route path="/albums" element={<Albums />} />
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/pricing" element={<Prices />} />
           <Route path="/" element={<HomePage />} />
           <Route path="/create-album" element={<CreateAlbum />} />
           <Route path="/forgot-password" element={<ForgotPw />} />

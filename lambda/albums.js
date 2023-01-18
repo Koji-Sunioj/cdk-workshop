@@ -15,10 +15,13 @@ exports.handler = async function (event, context) {
   const routeKey = `${httpMethod} ${resource}`;
   let returnObject = {};
   let statusCode = 200;
-  let type;
-
+  let type, albumId;
+  const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
   let dbParams = {
     TableName: process.env.ALBUM_TABLE_NAME,
+  };
+  let bucketParams = {
+    Bucket: process.env.ALBUM_BUCKET_NAME,
   };
   console.log(routeKey);
 
@@ -33,13 +36,23 @@ exports.handler = async function (event, context) {
           Expires: 20,
           ContentType: content_type,
         };
-        const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
+
         const url = await s3.getSignedUrl("putObject", buckParams);
         returnObject = { url: url };
       } else {
         statusCode = 403;
       }
       returnObject;
+      break;
+    case "GET /albums/{albumId}":
+      ({ albumId } = pathParameters);
+      const { Item: album } = await docClient
+        .get({
+          ...dbParams,
+          Key: { albumId: albumId },
+        })
+        .promise();
+      returnObject = { album: { ...album } };
       break;
     case "GET /albums":
       const { Items: albums } = await docClient.scan(dbParams).promise();
@@ -62,11 +75,36 @@ exports.handler = async function (event, context) {
       }
       break;
     case "DELETE /albums/{albumId}":
+      ({ type } = await verifyToken(headers));
+      if (type === "user") {
+        ({ albumId } = pathParameters);
+        bucketParams.Prefix = `${albumId}/`;
+        const { Contents } = await s3.listObjects(bucketParams).promise();
+        const keys = Contents.map((item) => {
+          const toDelete = { Key: item.Key };
+          return toDelete;
+        });
+        const deleteParams = {
+          Bucket: process.env.ALBUM_BUCKET_NAME,
+          Delete: {
+            Objects: keys,
+          },
+        };
+        await s3.deleteObjects(deleteParams).promise();
+        await docClient
+          .delete({
+            ...dbParams,
+            Key: { albumId: albumId },
+          })
+          .promise();
+        returnObject = { message: "items deleted" };
+      } else {
+        statusCode = 403;
+      }
       break;
     case "PATCH /albums/{albumId}":
       break;
-    case "GET /albums/{albumId}":
-      break;
+
     default:
       statusCode = 404;
       returnObject = { message: "no matching resource" };

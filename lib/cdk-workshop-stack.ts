@@ -124,6 +124,7 @@ export class CdkWorkshopStack extends cdk.Stack {
     });
 
     s3Bucket.grantPut(albumLambda);
+    s3Bucket.grantReadWrite(albumLambda);
 
     //permission for lambda to invoke table ops
     table.grantReadWriteData(albumLambda);

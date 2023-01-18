@@ -21,12 +21,6 @@ function NavBar() {
               <Nav.Link as={Link} to="/albums">
                 Photo Albums
               </Nav.Link>
-              <Nav.Link as={Link} to="/features">
-                Features
-              </Nav.Link>
-              <Nav.Link as={Link} to="/pricing">
-                Pricing
-              </Nav.Link>
               {login !== null ? (
                 <>
                   <Nav.Link as={Link} to="/account">

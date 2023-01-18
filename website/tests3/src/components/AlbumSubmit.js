@@ -37,14 +37,15 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef, postState }) => {
           name="title"
           ref={titleRef}
           onKeyPress={(e) => {
-            const shouldSubmit =
-              e.key === "Enter" && e.currentTarget.value.length > 0;
-            if (shouldSubmit) {
+            const properLength = e.currentTarget.value.length > 0;
+            const entered = e.key === "Enter";
+
+            if (entered && properLength) {
               setAlertState(false);
               formRef.current.dispatchEvent(
                 new Event("submit", { cancelable: true, bubbles: true })
               );
-            } else {
+            } else if (entered && !properLength) {
               setAlertState(true);
             }
           }}

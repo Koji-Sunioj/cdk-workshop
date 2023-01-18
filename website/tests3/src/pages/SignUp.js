@@ -28,7 +28,6 @@ function SignUp() {
     const {
       confirmation: { value: confirmationCode },
     } = event.currentTarget;
-    console.log(user);
     const statusCode = await confirmSignUp({
       ...user,
       confirmationCode: confirmationCode,

@@ -3,26 +3,37 @@ import Button from "react-bootstrap/Button";
 import Stack from "react-bootstrap/esm/Stack";
 import Container from "react-bootstrap/Container";
 
-import { useState } from "react";
 import moment from "moment";
+import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
 
 import { getAlbums } from "../utils/albumApi";
+import CardSkeleton from "../components/CardSkeleton";
 
 const Albums = () => {
   const [albums, setAlbums] = useState(null);
-  albums === null &&
-    (async () => {
-      const { albums } = await getAlbums();
+  const [loading, setLoading] = useState(false);
 
-      setAlbums(albums);
-    })();
+  useEffect(() => {
+    if (albums === null) {
+      setLoading(true);
+      fetchAlbums();
+    } else {
+      setLoading(false);
+    }
+  }, [albums]);
+
+  const fetchAlbums = async () => {
+    const { albums } = await getAlbums();
+    setAlbums(albums);
+  };
 
   const shouldRender = albums !== null && albums.length > 0;
-  console.log("rendered");
 
   return (
     <>
       <Container>
+        {loading && <CardSkeleton />}
         {shouldRender &&
           albums.map((album) => {
             const photos = album.photos.sort((a, b) =>
@@ -35,11 +46,16 @@ const Albums = () => {
               <Card className="mb-3" key={albumId}>
                 <Card.Img variant="top" src={photos[0].url} />
                 <Card.Body>
-                  <Card.Title>{title}</Card.Title>
+                  <Link to={`${albumId}`}>
+                    <Card.Title>{title}</Card.Title>
+                  </Link>
                   <Card.Subtitle className="mb-2 text-muted">
                     {created}
                   </Card.Subtitle>
-                  <Card.Text>{userName}</Card.Text>
+                  <Card.Text>
+                    {photos.length} {photos.length === 1 ? "photo " : "photos "}
+                    by {userName}
+                  </Card.Text>
                   <Stack direction="horizontal" gap={3} className="mt-3">
                     {tags.map((tag) => (
                       <Button variant="info" key={tag}>
