@@ -16,6 +16,7 @@ const UploadCarousel = ({
 }) => {
   return (
     <Carousel
+      className="mb-3"
       style={{ backgroundColor: "black" }}
       activeIndex={index}
       interval={null}

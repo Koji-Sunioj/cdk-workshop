@@ -24,6 +24,7 @@ const CreateAlbum = () => {
   const [editMode, setEditMode] = useState(false);
   const [login] = useContext(globalContext);
   const [tags, setTags] = useState([]);
+  const [title, setTitle] = useState("");
   const [previews, setPreviews] = useState([]);
   const [postState, setPostState] = useState("idle");
 
@@ -192,6 +193,8 @@ const CreateAlbum = () => {
                       tags={tags}
                       setTags={setTags}
                       postState={postState}
+                      setTitle={setTitle}
+                      title={title}
                     />
                   )}
                 </fieldset>

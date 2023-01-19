@@ -23,11 +23,20 @@ exports.handler = async function (event, context) {
   let bucketParams = {
     Bucket: process.env.ALBUM_BUCKET_NAME,
   };
-  console.log(routeKey);
+
+  const needsPermission = [
+    "POST /albums",
+    "DELETE /albums/{albumId}",
+    "PATCH /albums/{albumId}",
+    "GET /albums/init",
+  ];
+
+  if (needsPermission.includes(routeKey)) {
+    ({ type } = await verifyToken(headers));
+  }
 
   switch (routeKey) {
     case "GET /albums/init":
-      ({ type } = await verifyToken(headers));
       if (type === "user") {
         const { key, content_type } = queryStringParameters;
         let buckParams = {
@@ -59,7 +68,6 @@ exports.handler = async function (event, context) {
       returnObject = { albums: albums };
       break;
     case "POST /albums":
-      ({ type } = await verifyToken(headers));
       if (type === "user") {
         const newAlbum = JSON.parse(body);
         newAlbum.created = new Date().toISOString();
@@ -75,7 +83,6 @@ exports.handler = async function (event, context) {
       }
       break;
     case "DELETE /albums/{albumId}":
-      ({ type } = await verifyToken(headers));
       if (type === "user") {
         ({ albumId } = pathParameters);
         bucketParams.Prefix = `${albumId}/`;
@@ -103,6 +110,26 @@ exports.handler = async function (event, context) {
       }
       break;
     case "PATCH /albums/{albumId}":
+      if (type === "user") {
+        ({ albumId } = pathParameters);
+        const { photos, tags, title } = JSON.parse(body);
+        await docClient
+          .update({
+            ...dbParams,
+            Key: { albumId: albumId },
+            UpdateExpression:
+              "SET photos = :photos, title = :title, tags = :tags",
+            ExpressionAttributeValues: {
+              ":photos": photos,
+              ":title": title,
+              ":tags": tags,
+            },
+          })
+          .promise();
+        returnObject = { message: "success" };
+      } else {
+        statusCode = 403;
+      }
       break;
 
     default:

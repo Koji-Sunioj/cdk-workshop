@@ -8,7 +8,15 @@ import { postStatePointer } from "../utils/pointers";
 
 import { useRef, useState } from "react";
 
-const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef, postState }) => {
+const AlbumSubmit = ({
+  setUploadStep,
+  tags,
+  setTags,
+  formRef,
+  postState,
+  title,
+  setTitle,
+}) => {
   const tagRef = useRef();
   const titleRef = useRef();
   const [alertState, setAlertState] = useState(false);
@@ -33,9 +41,13 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef, postState }) => {
       <Form.Group className="mb-3">
         <Form.Control
           type="text"
+          defaultValue={title}
           placeholder="Album title"
           name="title"
           ref={titleRef}
+          onKeyUp={() => {
+            setTitle(titleRef.current.value);
+          }}
           onKeyPress={(e) => {
             const properLength = e.currentTarget.value.length > 0;
             const entered = e.key === "Enter";
@@ -106,9 +118,10 @@ const AlbumSubmit = ({ setUploadStep, tags, setTags, formRef, postState }) => {
       {tags.length > 0 && (
         <div className="mb-3">
           <p>Your tags:</p>
-          <Stack direction="horizontal" gap={3} clasName="mb-3">
+          <Stack direction="horizontal" gap={3} className="mb-3">
             {tags.map((tag) => (
               <Button
+                key={tag}
                 variant="info"
                 onClick={() => {
                   const filtered = tags.filter((item) => item !== tag);

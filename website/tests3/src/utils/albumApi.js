@@ -35,6 +35,17 @@ export const getAlbum = async (albumId) => {
   return album;
 };
 
+export const patchAlbum = async (albumTokenAlbumId) => {
+  const { album, token, albumId } = albumTokenAlbumId;
+  console.log(album);
+  const statusCode = await fetch(`${AlbumUrl}${albumId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(album),
+  }).then((response) => response.status);
+  return statusCode;
+};
+
 export const deleteAlbum = async (albumIdToken) => {
   const { albumId, token } = albumIdToken;
   const statusCode = await fetch(`${AlbumUrl}${albumId}`, {

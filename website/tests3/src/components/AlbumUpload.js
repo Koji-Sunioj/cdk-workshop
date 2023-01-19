@@ -1,13 +1,19 @@
 import Form from "react-bootstrap/Form";
+import Stack from "react-bootstrap/esm/Stack";
+import Button from "react-bootstrap/esm/Button";
 
-const AlbumUpload = ({
-  previewMapping,
-  defaultTitle = "Create album",
-  subtitle = null,
-}) => {
+import { useNavigate } from "react-router-dom";
+
+const AlbumUpload = ({ previewMapping, task, setStep = null }) => {
+  const navigate = useNavigate();
+  const title =
+    task === "edit"
+      ? "Add images to your existing album"
+      : "Upload images to a new album";
+
   return (
     <>
-      <h2>{defaultTitle}</h2>
+      <h2>{title}</h2>
       <Form.Group className="mb-3">
         <Form.Label>Upload your files (max 10)</Form.Label>
         <Form.Control
@@ -18,10 +24,30 @@ const AlbumUpload = ({
           multiple
           onChange={previewMapping}
         />
-        {subtitle !== null && (
-          <Form.Text className="text-muted">{subtitle}</Form.Text>
+        {task === "edit" && (
+          <Form.Text className="text-muted">
+            Images which already exist in your album will be ignored
+          </Form.Text>
         )}
       </Form.Group>
+      {task === "edit" && (
+        <Stack direction="horizontal" gap={3}>
+          <Button
+            onClick={() => {
+              navigate(-1);
+            }}
+          >
+            Go back
+          </Button>
+          <Button
+            onClick={() => {
+              setStep("edit");
+            }}
+          >
+            Next
+          </Button>
+        </Stack>
+      )}
     </>
   );
 };
