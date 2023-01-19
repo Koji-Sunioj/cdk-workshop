@@ -15,7 +15,7 @@ exports.handler = async function (event, context) {
   const routeKey = `${httpMethod} ${resource}`;
   let returnObject = {};
   let statusCode = 200;
-  let type, albumId;
+  let type, albumId, s3Object;
   const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
   let dbParams = {
     TableName: process.env.ALBUM_TABLE_NAME,
@@ -29,6 +29,7 @@ exports.handler = async function (event, context) {
     "DELETE /albums/{albumId}",
     "PATCH /albums/{albumId}",
     "GET /albums/init",
+    "DELETE /albums/{albumId}/{s3Object}",
   ];
 
   if (needsPermission.includes(routeKey)) {
@@ -82,6 +83,17 @@ exports.handler = async function (event, context) {
         statusCode = 403;
       }
       break;
+    case "DELETE /albums/{albumId}/{s3Object}":
+      ({ albumId, s3Object } = pathParameters);
+      if (type === "user") {
+        bucketParams.Key = `${albumId}/${s3Object}`;
+        await s3.deleteObject(bucketParams).promise();
+        returnObject = { message: "successfully deleted" };
+      } else {
+        statusCode = 403;
+      }
+      break;
+
     case "DELETE /albums/{albumId}":
       if (type === "user") {
         ({ albumId } = pathParameters);

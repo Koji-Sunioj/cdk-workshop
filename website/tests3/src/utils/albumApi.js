@@ -54,3 +54,12 @@ export const deleteAlbum = async (albumIdToken) => {
   }).then((response) => response.status);
   return statusCode;
 };
+
+export const deleteObject = async (albumidTokens3Object) => {
+  const { albumId, token, s3Object } = albumidTokens3Object;
+  const statusCode = await fetch(`${AlbumUrl}${albumId}/${s3Object}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  }).then((response) => response.status);
+  return statusCode;
+};

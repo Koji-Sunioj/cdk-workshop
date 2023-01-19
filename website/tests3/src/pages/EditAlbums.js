@@ -5,7 +5,12 @@ import Form from "react-bootstrap/Form";
 import Container from "react-bootstrap/esm/Container";
 
 import { globalContext } from "../App";
-import { getAlbum, patchAlbum, getSignedUrl } from "../utils/albumApi";
+import {
+  getAlbum,
+  patchAlbum,
+  getSignedUrl,
+  deleteObject,
+} from "../utils/albumApi";
 import AlbumEdit from "../components/AlbumEdit";
 import AlbumSubmit from "../components/AlbumSubmit";
 import AlbumUpload from "../components/AlbumUpload";
@@ -46,31 +51,55 @@ const EditAlbum = () => {
     event.preventDefault();
     setPatchState("patching");
     const { AccessToken } = login;
+
+    let deleteResponses = [];
+    let putResponses = [];
+
+    //1. if any objects exist in the deletion array, remove from s3
+    if (mutateS3.length > 0) {
+      const keys = mutateS3.map((item) => item.name);
+      deleteResponses = await Promise.all(
+        keys.map(async (key) => {
+          const statusCode = await deleteObject({
+            s3Object: key,
+            token: AccessToken,
+            albumId: albumId,
+          });
+          return statusCode === 200;
+        })
+      );
+    }
+
+    //2. put any objects in previews which don't already exist in s3
     const toBePut = previews.filter((item) => item.type !== "s3Object");
     const dynamoData = [];
-    const responses = await Promise.all(
-      toBePut.map(async (item) => {
-        const { name, type, file, text, order } = item;
-        const newPath = `${albumId}/${name}`;
-        const { url } = await getSignedUrl({
-          name: newPath,
-          type: type,
-          token: AccessToken,
-        });
-        const response = await fetch(url, {
-          method: "PUT",
-          body: file,
-        });
-        dynamoData.push({
-          url: response.url.split("?")[0],
-          text: text,
-          order: order,
-        });
-        return response.ok;
-      })
-    );
+    if (deleteResponses.every((response) => response) && toBePut.length > 0) {
+      putResponses = await Promise.all(
+        toBePut.map(async (item) => {
+          const { name, type, file, text, order } = item;
+          const newPath = `${albumId}/${name}`;
+          const { url } = await getSignedUrl({
+            name: newPath,
+            type: type,
+            token: AccessToken,
+          });
+          const response = await fetch(url, {
+            method: "PUT",
+            body: file,
+          });
+          dynamoData.push({
+            url: response.url.split("?")[0],
+            text: text,
+            order: order,
+          });
+          return response.ok;
+        })
+      );
+    }
 
-    if (responses.every((response) => response)) {
+    //.3 if all put tasks successful, concat the values with the preview values
+    // which exist in s3 and dynamo db, update db
+    if (putResponses.every((response) => response)) {
       const s3Existing = previews.filter((item) => item.type === "s3Object");
       const readForPatch = s3Existing.map((item) => {
         const photo = { url: item.blob, text: item.text, order: item.order };
@@ -92,41 +121,14 @@ const EditAlbum = () => {
       switch (statusCode) {
         case 200:
           setPatchState("patched");
-          navigate(`/albums/${albumId}`);
+          setTimeout(() => {
+            navigate(`/albums/${albumId}`);
+          }, 1500);
           break;
         default:
           alert("error");
       }
     }
-
-    // const toBePatched = previews.filter((item) => item.type === "s3Object");
-    // const readForPatch = toBePatched.map((item) => {
-    //   const photo = { url: item.blob, text: item.text, order: item.order };
-    //   return photo;
-    // });
-    // const sendObject = {
-    //   album: {
-    //     title: title,
-    //     albumId: albumId,
-    //     photos: readForPatch,
-    //     tags: tags,
-    //   },
-    //   token: AccessToken,
-    //   albumId: albumId,
-    // };
-
-    // console.log(sendObject);
-    // const statusCode = await patchAlbum(sendObject);
-    // switch (statusCode) {
-    //   case 200:
-    //     alert("success");
-    //     setPatchState("patched");
-    //     navigate(`/albums/${albumId}`);
-    //     break;
-    //   default:
-    //     alert("error");
-    // }
-    setPatchState("idle");
   };
 
   const createMapFromFetch = (album) => {
