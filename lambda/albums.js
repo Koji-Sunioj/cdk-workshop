@@ -86,7 +86,7 @@ exports.handler = async function (event, context) {
     case "DELETE /albums/{albumId}/{s3Object}":
       ({ albumId, s3Object } = pathParameters);
       if (type === "user") {
-        bucketParams.Key = `${albumId}/${s3Object}`;
+        bucketParams.Key = `${albumId}/${s3Object.replace(/%20/g, " ")}`;
         await s3.deleteObject(bucketParams).promise();
         returnObject = { message: "successfully deleted" };
       } else {
