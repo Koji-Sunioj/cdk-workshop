@@ -238,14 +238,9 @@ const EditAlbum = () => {
     (previews !== null && previews.length === 0) || login === null;
   const shouldRender =
     previews !== null && previews.length > 0 && login !== null;
-  const editAble =
-    previews !== null && previews.length > 0 && editStep === "edit";
 
-  const submitAble =
-    previews !== null &&
-    previews.length > 0 &&
-    editStep === "submit" &&
-    login !== null;
+  const editAble = shouldRender && editStep === "edit";
+  const submitAble = shouldRender && editStep === "submit";
 
   return (
     <Container>
