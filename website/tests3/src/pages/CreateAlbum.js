@@ -17,14 +17,28 @@ import { useState, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const CreateAlbum = () => {
-  const navigate = useNavigate();
+  // const formRef = useRef();
+  // const navigate = useNavigate();
+  // // const { albumId } = useParams();
+  // // const { state } = useLocation();
+  // const [index, setIndex] = useState(0);
+  // const [login] = useContext(globalContext);
+  // const [tags, setTags] = useState([]);
+  // const [editMode, setEditMode] = useState(false);
+  // const [title, setTitle] = useState("");
+  // // const [patchState, setPatchState] = useState("idle");
+  // const [editStep, setEditStep] = useState("upload");
+  // // const [mutateS3, setMutateS3] = useState([]);
+  // const [previews, setPreviews] = useState(null);
+
   const formRef = useRef();
+  const navigate = useNavigate();
   const [index, setIndex] = useState(0);
-  const [uploadStep, setUploadStep] = useState("upload");
-  const [editMode, setEditMode] = useState(false);
   const [login] = useContext(globalContext);
   const [tags, setTags] = useState([]);
+  const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState("");
+  const [uploadStep, setUploadStep] = useState("upload");
   const [previews, setPreviews] = useState([]);
   const [postState, setPostState] = useState("idle");
 

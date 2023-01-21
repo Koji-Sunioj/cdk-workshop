@@ -10,6 +10,7 @@ import ForgotPw from "./pages/ForgotPw";
 import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
+import AlbumForm from "./pages/AlbumForm";
 import CreateAlbum from "./pages/CreateAlbum";
 import EditAlbum from "./pages/EditAlbums";
 
@@ -47,12 +48,18 @@ function App() {
         <br />
         <Routes>
           <Route path="/albums/:albumId" element={<Album />} />
-          <Route path="/albums/edit/:albumId" element={<EditAlbum />} />
+          <Route path="/create-album" element={<AlbumForm task="create" />} />
+          <Route
+            path="/albums/edit/:albumId"
+            element={<AlbumForm task="edit" />}
+          />
+          {/* <Route path="/create-album" element={<CreateAlbum />} />
+          <Route path="/albums/edit/:albumId" element={<EditAlbum />} /> */}
           <Route path="/albums" element={<Albums />} />
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/" element={<HomePage />} />
-          <Route path="/create-album" element={<CreateAlbum />} />
+
           <Route path="/forgot-password" element={<ForgotPw />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="*" element={<NotFound />} />
