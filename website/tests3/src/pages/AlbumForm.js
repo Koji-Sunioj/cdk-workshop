@@ -11,14 +11,15 @@ import AlbumUpload from "../components/AlbumUpload";
 import UploadCarousel from "../components/UploadCarousel";
 
 import { globalContext } from "../App";
+import { getAlbum, patchAlbum, newAlbum } from "../utils/albumApi";
 import {
-  getAlbum,
-  patchAlbum,
-  deleteObject,
-  getSignedUrl,
-  newAlbum,
-} from "../utils/albumApi";
-import { fileMapper, existingFileMapper } from "../utils/previewMapping";
+  fileMapper,
+  existingFileMapper,
+  deleteS3Mapper,
+  putS3Mapper,
+  responseMapper,
+  previewMapper,
+} from "../utils/mappers";
 
 import uuid from "react-uuid";
 import { useState, useContext, useRef, useEffect } from "react";
@@ -27,11 +28,12 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 const AlbumForm = ({ task }) => {
   const formRef = useRef();
   const navigate = useNavigate();
-  const { albumId } = useParams();
+  let { albumId } = useParams();
   const { state } = useLocation();
-  const [index, setIndex] = useState(0);
   const [login] = useContext(globalContext);
+
   const [tags, setTags] = useState([]);
+  const [index, setIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [title, setTitle] = useState("");
   const [patchState, setPatchState] = useState("idle");
@@ -50,13 +52,94 @@ const AlbumForm = ({ task }) => {
       })();
   }, [state]);
 
-  //done
+  const updateAlbum = async (event) => {
+    event.preventDefault();
+    setPatchState("patching");
+    let putResponses = [];
+    let deleteResponses = [];
+    let finalPhotos, sendObject, statusCode;
+    const { AccessToken, userName } = login;
+
+    switch (task) {
+      case "edit":
+        //deleting objects from s3
+        if (mutateS3.length > 0) {
+          const keys = mutateS3.map((item) => item.name);
+          deleteResponses = await Promise.all(
+            keys.map(deleteS3Mapper({ token: AccessToken, albumId: albumId }))
+          );
+        }
+
+        //putting new objects to s3
+        const toBePut = previews.filter((item) => item.type !== "s3Object");
+        const shouldPut =
+          deleteResponses.every((response) => response) && toBePut.length > 0;
+        if (shouldPut) {
+          putResponses = await Promise.all(
+            toBePut.map(putS3Mapper({ token: AccessToken, albumId: albumId }))
+          );
+        }
+
+        //updating dynamodb
+        if (putResponses.every((response) => response.success)) {
+          const dynamoData = putResponses.map(responseMapper);
+          const s3Existing = previews.filter(
+            (item) => item.type === "s3Object"
+          );
+          const readForPatch = s3Existing.map(previewMapper);
+
+          finalPhotos = readForPatch.concat(dynamoData);
+          sendObject = {
+            album: {
+              title: title,
+              albumId: albumId,
+              photos: finalPhotos,
+              tags: tags,
+            },
+            token: AccessToken,
+            albumId: albumId,
+          };
+          statusCode = await patchAlbum(sendObject);
+        }
+        break;
+      case "create":
+        albumId = uuid();
+        putResponses = await Promise.all(
+          previews.map(putS3Mapper({ token: AccessToken, albumId: albumId }))
+        );
+
+        if (putResponses.every((response) => response.success)) {
+          finalPhotos = putResponses.map(responseMapper);
+          sendObject = {
+            token: AccessToken,
+            album: {
+              photos: finalPhotos,
+              albumId: albumId,
+              title: title,
+              userName: userName,
+              tags: tags,
+            },
+          };
+          statusCode = await newAlbum(sendObject);
+        }
+        break;
+    }
+
+    if (statusCode === 200) {
+      setPatchState("patched");
+      setTimeout(() => {
+        navigate(`/albums/${albumId}`);
+      }, 1500);
+    } else {
+      alert("error");
+    }
+  };
+
   const fetchAlbum = async () => {
     const { album } = await getAlbum(albumId);
     createMapFromFetch(album);
   };
 
-  //done
   const previewMapping = (event) => {
     const {
       target: { files },
@@ -88,7 +171,6 @@ const AlbumForm = ({ task }) => {
     setEditStep("edit");
   };
 
-  //done
   const startOver = () => {
     if (task === "edit") {
       fetchAlbum();
@@ -101,88 +183,19 @@ const AlbumForm = ({ task }) => {
     setIndex(0);
   };
 
-  const updateAlbum = async (event) => {
-    event.preventDefault();
-    setPatchState("patching");
-    const { AccessToken } = login;
+  const reOrder = (order, position) => {
+    const found = previews.find((item) => item.order === order);
+    const filtered = previews.filter((item) => item.order !== order);
+    const trueIndex = found.order - 1;
+    let sideStep = position === "front" ? trueIndex - 1 : trueIndex + 1;
 
-    let deleteResponses = [];
-    let putResponses = [];
+    position === "front"
+      ? filtered.splice(sideStep, 0, found)
+      : filtered.splice(sideStep, 0, found);
 
-    //1. if any objects exist in the deletion array, remove from s3
-    if (mutateS3.length > 0) {
-      const keys = mutateS3.map((item) => item.name);
-      deleteResponses = await Promise.all(
-        keys.map(async (key) => {
-          const statusCode = await deleteObject({
-            s3Object: key,
-            token: AccessToken,
-            albumId: albumId,
-          });
-          return statusCode === 200;
-        })
-      );
-    }
-
-    //2. put any objects in previews which don't already exist in s3
-    const toBePut = previews.filter((item) => item.type !== "s3Object");
-    const dynamoData = [];
-    if (deleteResponses.every((response) => response) && toBePut.length > 0) {
-      putResponses = await Promise.all(
-        toBePut.map(async (item) => {
-          const { name, type, file, text, order } = item;
-          const newPath = `${albumId}/${name}`;
-          const { url } = await getSignedUrl({
-            name: newPath,
-            type: type,
-            token: AccessToken,
-          });
-          const response = await fetch(url, {
-            method: "PUT",
-            body: file,
-          });
-          dynamoData.push({
-            url: response.url.split("?")[0],
-            text: text,
-            order: order,
-          });
-          return response.ok;
-        })
-      );
-    }
-
-    //.3 if all put tasks successful, concat the values with the preview values
-    // which exist in s3 and dynamo db, update db
-    if (putResponses.every((response) => response)) {
-      const s3Existing = previews.filter((item) => item.type === "s3Object");
-      const readForPatch = s3Existing.map((item) => {
-        const photo = { url: item.blob, text: item.text, order: item.order };
-        return photo;
-      });
-
-      const merged = readForPatch.concat(dynamoData);
-      const sendObject = {
-        album: {
-          title: title,
-          albumId: albumId,
-          photos: merged,
-          tags: tags,
-        },
-        token: AccessToken,
-        albumId: albumId,
-      };
-      const statusCode = await patchAlbum(sendObject);
-      switch (statusCode) {
-        case 200:
-          setPatchState("patched");
-          setTimeout(() => {
-            navigate(`/albums/${albumId}`);
-          }, 1500);
-          break;
-        default:
-          alert("error");
-      }
-    }
+    filtered.forEach((item, n) => (item.order = n + 1));
+    setIndex(sideStep);
+    setPreviews(filtered);
   };
 
   const createMapFromFetch = (album) => {
@@ -230,21 +243,6 @@ const AlbumForm = ({ task }) => {
       setPreviews(filtered);
       setIndex(0);
     }
-  };
-
-  const reOrder = (order, position) => {
-    const found = previews.find((item) => item.order === order);
-    const filtered = previews.filter((item) => item.order !== order);
-    const trueIndex = found.order - 1;
-    let sideStep = position === "front" ? trueIndex - 1 : trueIndex + 1;
-
-    position === "front"
-      ? filtered.splice(sideStep, 0, found)
-      : filtered.splice(sideStep, 0, found);
-
-    filtered.forEach((item, n) => (item.order = n + 1));
-    setIndex(sideStep);
-    setPreviews(filtered);
   };
 
   const shouldError =

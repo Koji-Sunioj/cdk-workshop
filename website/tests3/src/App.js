@@ -11,8 +11,6 @@ import NotFound from "./pages/NotFound";
 import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
 import AlbumForm from "./pages/AlbumForm";
-import CreateAlbum from "./pages/CreateAlbum";
-import EditAlbum from "./pages/EditAlbums";
 
 import { verifiyToken } from "./utils/signUpApi";
 
@@ -53,8 +51,6 @@ function App() {
             path="/albums/edit/:albumId"
             element={<AlbumForm task="edit" />}
           />
-          {/* <Route path="/create-album" element={<CreateAlbum />} />
-          <Route path="/albums/edit/:albumId" element={<EditAlbum />} /> */}
           <Route path="/albums" element={<Albums />} />
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
