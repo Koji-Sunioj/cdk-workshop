@@ -1,18 +1,10 @@
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
-import Container from "react-bootstrap/Container";
+import ContainerRowCol from "../components/ContainerRowCol";
 
 function NotFound() {
   return (
-    <>
-      <Container>
-        <Row>
-          <Col>
-            <h2>No matching resource</h2>
-          </Col>
-        </Row>
-      </Container>
-    </>
+    <ContainerRowCol>
+      <h2>No matching resource</h2>
+    </ContainerRowCol>
   );
 }
 

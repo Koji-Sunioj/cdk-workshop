@@ -1,18 +1,22 @@
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import Alert from "react-bootstrap/Alert";
+import Stack from "react-bootstrap/esm/Stack";
 import Button from "react-bootstrap/esm/Button";
-import Container from "react-bootstrap/Container";
-import NotFound from "./NotFound";
 
 import { globalContext } from "../App";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { checkPw } from "../utils/checkPw";
+import { resetPointer } from "../utils/pointers";
 import { resetPassword } from "../utils/signUpApi";
+
+import NotFound from "./NotFound";
 import PwInputs from "../components/PwInputs";
+import ContainerRowCol from "../components/ContainerRowCol";
 
 function Account() {
   const navigate = useNavigate();
+  const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [resetFlow, setResetFlow] = useState(false);
   const [login, setLogin] = useContext(globalContext);
@@ -28,15 +32,10 @@ function Account() {
       password: { value: password },
       confirmPassword: { value: confirmPassword },
     } = event.currentTarget;
-
-    const pattern = /(?=.*[a-z])(?=[A-Z]{1})/;
-    const isInValid =
-      password !== confirmPassword ||
-      password.length < 8 ||
-      !pattern.test(password);
+    const isInValid = checkPw(password, confirmPassword);
 
     if (isInValid) {
-      alert("hey");
+      setMessage("danger");
     } else {
       setLoading(true);
       const statusCode = await resetPassword({
@@ -46,13 +45,16 @@ function Account() {
       });
       switch (statusCode) {
         case 200:
-          alert("successfully changed password");
+          setMessage("success");
           break;
         default:
-          alert("there was an error");
+          setMessage("danger");
       }
-      setLoading(false);
-      setResetFlow(false);
+      setTimeout(() => {
+        setLoading(false);
+        setMessage(null);
+        setResetFlow(false);
+      }, 1500);
     }
   };
 
@@ -61,49 +63,45 @@ function Account() {
       {login === null ? (
         <NotFound />
       ) : (
-        <Container>
-          <Row>
-            <Col lg="5">
-              {resetFlow ? (
-                <>
-                  <h2>Reset password for {userName}</h2>
-                  <PwInputs handler={initiateReset} loading={loading} />
-                </>
-              ) : (
-                <>
-                  <h2>Welcome {userName}</h2>
-                  <div
-                    style={{
-                      paddingTop: "10px",
-                      display: "flex",
-                      flexDirection: "row",
-                      gap: "10px",
-                    }}
-                  >
-                    <Button
-                      onClick={() => {
-                        setResetFlow(true);
-                      }}
-                    >
-                      Reset Password
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setLogin(null);
-                        localStorage.removeItem("userName");
-                        localStorage.removeItem("AccessToken");
-                        alert("successfully logged out");
-                        navigate("/");
-                      }}
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
-                </>
+        <ContainerRowCol>
+          {resetFlow ? (
+            <>
+              <h2>Reset password for {userName}</h2>
+              <PwInputs handler={initiateReset} loading={loading} />
+              {message !== null && (
+                <Alert variant={message}>{resetPointer[message]}</Alert>
               )}
-            </Col>
-          </Row>
-        </Container>
+            </>
+          ) : (
+            <>
+              <h2>Welcome {userName}</h2>
+              <Stack direction="horizontal" gap={3} className="mb-3">
+                <Button
+                  onClick={() => {
+                    setResetFlow(true);
+                  }}
+                >
+                  Reset Password
+                </Button>
+                <Button
+                  onClick={() => {
+                    setMessage("success");
+                    setTimeout(() => {
+                      setLogin(null);
+                      localStorage.clear();
+                      navigate("/");
+                    }, 1500);
+                  }}
+                >
+                  Sign Out
+                </Button>
+              </Stack>
+              {message === "success" && (
+                <Alert variant="success">successfully logged out</Alert>
+              )}
+            </>
+          )}
+        </ContainerRowCol>
       )}
     </>
   );

@@ -31,7 +31,6 @@ const AlbumForm = ({ task }) => {
   let { albumId } = useParams();
   const { state } = useLocation();
   const [login] = useContext(globalContext);
-
   const [tags, setTags] = useState([]);
   const [index, setIndex] = useState(0);
   const [editMode, setEditMode] = useState(false);
@@ -47,6 +46,7 @@ const AlbumForm = ({ task }) => {
         if (state !== null && state.hasOwnProperty("album")) {
           createMapFromFetch(state.album);
         } else {
+          console.log("festec");
           fetchAlbum();
         }
       })();
@@ -137,6 +137,7 @@ const AlbumForm = ({ task }) => {
 
   const fetchAlbum = async () => {
     const { album } = await getAlbum(albumId);
+    console.log(album);
     createMapFromFetch(album);
   };
 

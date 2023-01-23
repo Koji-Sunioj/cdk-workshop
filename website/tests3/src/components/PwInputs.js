@@ -4,7 +4,7 @@ import Button from "react-bootstrap/Button";
 const PwInputs = ({ handler, loading, children, confirmPw = true }) => {
   return (
     <>
-      <Form onSubmit={handler}>
+      <Form onSubmit={handler} className="mb-3">
         <fieldset disabled={loading}>
           {children}
           <Form.Group className="mb-3">
