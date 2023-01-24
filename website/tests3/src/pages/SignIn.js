@@ -7,7 +7,6 @@ import { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import { authenticate } from "../utils/signUpApi";
-import { signInPointer } from "../utils/pointers";
 
 import PwInputs from "../components/PwInputs";
 import ContainerRowCol from "../components/ContainerRowCol";
@@ -15,7 +14,10 @@ import ContainerRowCol from "../components/ContainerRowCol";
 function SignIn() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [apiState, setApiState] = useState(null);
+  const [{ type, message }, setMessage] = useState({
+    type: null,
+    message: null,
+  });
   const [, setLogin] = useContext(globalContext);
 
   const signIn = async (event) => {
@@ -30,7 +32,7 @@ function SignIn() {
       token.hasOwnProperty("AccessToken") &&
         (() => {
           setLogin({ userName: email, ...token });
-          setApiState("success");
+          setMessage({ type: "success", message: "successfully signed in" });
           localStorage.clear();
           localStorage.setItem("userName", email);
           localStorage.setItem("AccessToken", token.AccessToken);
@@ -40,7 +42,10 @@ function SignIn() {
         })();
     } catch {
       setLoading(false);
-      setApiState("danger");
+      setMessage({
+        type: "danger",
+        message: "mismatch password, or user doesn't exist",
+      });
     }
   };
 
@@ -62,14 +67,7 @@ function SignIn() {
         <Link to={"/forgot-password"}>Forgot password?</Link>
       </Stack>
       <br />
-      <Alert
-        show={apiState}
-        variant={apiState}
-        onClose={() => setApiState(null)}
-        dismissible
-      >
-        {signInPointer[apiState]}
-      </Alert>
+      <Alert variant={type}>{message}</Alert>
     </ContainerRowCol>
   );
 }

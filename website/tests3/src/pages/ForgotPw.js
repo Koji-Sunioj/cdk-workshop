@@ -6,7 +6,6 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { checkPw } from "../utils/checkPw";
-import { resetPointer } from "../utils/pointers";
 import { forgotPassword, confirmForgotResetPassword } from "../utils/signUpApi";
 
 import PwInputs from "../components/PwInputs";
@@ -16,11 +15,13 @@ function ForgotPw() {
   const navigate = useNavigate();
   const [pwFlow, setPwFlow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState(null);
+  const [{ type, message }, setMessage] = useState({
+    type: null,
+    message: null,
+  });
   const [userName, setUserName] = useState(null);
 
   const sendResetCode = async (event) => {
-    setMessage(null);
     setLoading(true);
     event.preventDefault();
     const {
@@ -50,7 +51,10 @@ function ForgotPw() {
     const isInValid = checkPw(password, confirmPassword);
 
     if (isInValid) {
-      setMessage("danger");
+      setMessage({
+        type: "danger",
+        message: "mismatch password, or doesn't meet requirements",
+      });
       setLoading(false);
     } else {
       try {
@@ -59,12 +63,15 @@ function ForgotPw() {
           passWord: password,
           confirmationCode: confirmationCode,
         });
-        setMessage("success");
+        setMessage({ type: "success", message: "successfully reset password" });
         setTimeout(() => {
           navigate("/sign-in");
         }, 1500);
       } catch {
-        setMessage("danger");
+        setMessage({
+          type: "danger",
+          message: "invalid token or user already exists",
+        });
         setLoading(false);
       }
     }
@@ -85,9 +92,7 @@ function ForgotPw() {
               />
             </Form.Group>
           </PwInputs>
-          {message !== null && (
-            <Alert variant={message}>{resetPointer[message]}</Alert>
-          )}
+          <Alert variant={type}>{message}</Alert>
         </>
       ) : (
         <>
@@ -105,9 +110,7 @@ function ForgotPw() {
               Submit
             </Button>
           </Form>
-          {message === "danger" && (
-            <Alert variant="danger">no username with that email found</Alert>
-          )}
+          <Alert variant={type}>{message}</Alert>
         </>
       )}
     </ContainerRowCol>

@@ -7,7 +7,6 @@ import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { checkPw } from "../utils/checkPw";
-import { resetPointer } from "../utils/pointers";
 import { resetPassword } from "../utils/signUpApi";
 
 import NotFound from "./NotFound";
@@ -16,7 +15,11 @@ import ContainerRowCol from "../components/ContainerRowCol";
 
 function Account() {
   const navigate = useNavigate();
-  const [message, setMessage] = useState(null);
+  const initMessage = {
+    type: null,
+    message: null,
+  };
+  const [{ type, message }, setMessage] = useState(initMessage);
   const [loading, setLoading] = useState(false);
   const [resetFlow, setResetFlow] = useState(false);
   const [login, setLogin] = useContext(globalContext);
@@ -35,7 +38,10 @@ function Account() {
     const isInValid = checkPw(password, confirmPassword);
 
     if (isInValid) {
-      setMessage("danger");
+      setMessage({
+        type: "danger",
+        message: "mismatch password, or doesn't meet requirements",
+      });
     } else {
       setLoading(true);
       const statusCode = await resetPassword({
@@ -45,15 +51,21 @@ function Account() {
       });
       switch (statusCode) {
         case 200:
-          setMessage("success");
+          setMessage({
+            type: "success",
+            message: "successfully reset password",
+          });
           break;
         default:
-          setMessage("danger");
+          setMessage({
+            type: "danger",
+            message: "network error",
+          });
       }
       setTimeout(() => {
         setLoading(false);
-        setMessage(null);
         setResetFlow(false);
+        setMessage(initMessage);
       }, 1500);
     }
   };
@@ -68,9 +80,7 @@ function Account() {
             <>
               <h2>Reset password for {userName}</h2>
               <PwInputs handler={initiateReset} loading={loading} />
-              {message !== null && (
-                <Alert variant={message}>{resetPointer[message]}</Alert>
-              )}
+              <Alert variant={type}>{message}</Alert>
             </>
           ) : (
             <>
@@ -85,7 +95,10 @@ function Account() {
                 </Button>
                 <Button
                   onClick={() => {
-                    setMessage("success");
+                    setMessage({
+                      type: "success",
+                      message: "successfully logged out",
+                    });
                     setTimeout(() => {
                       setLogin(null);
                       localStorage.clear();
@@ -96,9 +109,7 @@ function Account() {
                   Sign Out
                 </Button>
               </Stack>
-              {message === "success" && (
-                <Alert variant="success">successfully logged out</Alert>
-              )}
+              <Alert variant={type}>{message}</Alert>
             </>
           )}
         </ContainerRowCol>

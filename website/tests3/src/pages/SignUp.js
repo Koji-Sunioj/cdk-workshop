@@ -14,8 +14,8 @@ import {
 } from "../utils/signUpApi";
 import { checkPw } from "../utils/checkPw";
 
-import ContainerRowCol from "../components/ContainerRowCol";
 import PwInputs from "../components/PwInputs";
+import ContainerRowCol from "../components/ContainerRowCol";
 
 function SignUp() {
   const navigate = useNavigate();
@@ -153,7 +153,7 @@ function SignUp() {
               Resend Code
             </Button>
           </Form>
-          {type !== null && <Alert variant={type}>{message}</Alert>}
+          <Alert variant={type}>{message}</Alert>
         </>
       )}
     </ContainerRowCol>

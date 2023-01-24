@@ -5,13 +5,3 @@ export const postStatePointer = {
   patching: { message: "Updating...", variant: "info" },
   patched: { message: "Updated!", variant: "success" },
 };
-
-export const signInPointer = {
-  success: "successfully logged in",
-  danger: "mismatch password, or user doesn't exist",
-};
-
-export const resetPointer = {
-  success: "successfully reset password",
-  danger: "mismatch password, or doesn't meet requirements",
-};
