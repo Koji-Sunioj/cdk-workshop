@@ -1,6 +1,5 @@
 import Card from "react-bootstrap/Card";
-
-import { filler } from "../utils/styles";
+import Placeholder from "react-bootstrap/Placeholder";
 
 const CardSkeleton = () => {
   return (
@@ -10,13 +9,16 @@ const CardSkeleton = () => {
           variant="top"
           src={"https://via.placeholder.com/400x400.png?text=Loading"}
         />
-
         <Card.Body>
-          <Card.Title style={filler}>&nbsp;</Card.Title>
-          <Card.Subtitle className="mb-2 text-muted" style={filler}>
-            &nbsp;
-          </Card.Subtitle>
-          <Card.Text style={filler}>&nbsp;</Card.Text>
+          <Placeholder as={Card.Title} animation="glow">
+            <Placeholder xs={6} />
+          </Placeholder>
+          <Placeholder as={Card.Subtitle} animation="glow">
+            <Placeholder xs={6} />
+          </Placeholder>
+          <Placeholder as={Card.Text} animation="glow">
+            <Placeholder xs={6} />
+          </Placeholder>
         </Card.Body>
       </Card>
     </>

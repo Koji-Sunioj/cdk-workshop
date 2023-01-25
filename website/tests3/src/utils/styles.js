@@ -16,12 +16,6 @@ export const carouselImg = {
   display: "block",
 };
 
-export const buttonRow = {
-  display: "flex",
-  flexDirection: "row",
-  justifyContent: "space-around",
-};
-
 export const filler = {
   backgroundColor: "lightgrey",
   width: "20vw",

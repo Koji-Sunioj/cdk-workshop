@@ -1,9 +1,10 @@
 import Form from "react-bootstrap/Form";
+import Stack from "react-bootstrap/esm/Stack";
 import Button from "react-bootstrap/esm/Button";
 import Carousel from "react-bootstrap/Carousel";
 import CloseButton from "react-bootstrap/esm/CloseButton";
 
-import { carouselEditPanel, carouselImg, buttonRow } from "../utils/styles";
+import { carouselEditPanel, carouselImg } from "../utils/styles";
 
 const UploadCarousel = ({
   setIndex,
@@ -81,7 +82,7 @@ const UploadCarousel = ({
                       }}
                     />
                   </Form.Group>
-                  <div style={buttonRow}>
+                  <Stack direction="horizontal" gap={3}>
                     <Button
                       size="sm"
                       variant="primary"
@@ -102,7 +103,7 @@ const UploadCarousel = ({
                     >
                       Push backward
                     </Button>
-                  </div>
+                  </Stack>
                 </div>
               </Carousel.Caption>
             )}
