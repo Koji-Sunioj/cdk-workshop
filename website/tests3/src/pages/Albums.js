@@ -5,16 +5,18 @@ import Col from "react-bootstrap/esm/Col";
 import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Pagination from "react-bootstrap/Pagination";
+import InputGroup from "react-bootstrap/InputGroup";
 import ToggleButton from "react-bootstrap/ToggleButton";
 
 import moment from "moment";
 import { Link, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import { getAlbums } from "../utils/albumApi";
 import CardSkeleton from "../components/CardSkeleton";
 
 const Albums = () => {
+  const queryRef = useRef();
   const [searchParams, setSearchParams] = useSearchParams();
   const [albums, setAlbums] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -26,21 +28,29 @@ const Albums = () => {
     searchParams.get("direction") || "descending"
   );
   const [sort, setSort] = useState(searchParams.get("sort") || "created");
+  const [query, setQuery] = useState(searchParams.get("query") || "");
 
   useEffect(() => {
     if (
       albums === null ||
       page !== Number(searchParams.get("page")) ||
       direction !== searchParams.get("direction") ||
-      sort !== searchParams.get("sort")
+      sort !== searchParams.get("sort") ||
+      query !== searchParams.get("query")
     ) {
-      setSearchParams({ page: page, direction: direction, sort: sort });
+      const queryParams = {
+        page: page,
+        direction: direction,
+        sort: sort,
+        query: query,
+      };
+      setSearchParams(queryParams);
       setLoading(true);
       fetchAlbums();
     } else {
       setLoading(false);
     }
-  }, [albums, page, direction, sort]);
+  }, [albums, page, direction, sort, query]);
 
   const fetchAlbums = async () => {
     const { albums, pages: fetchedPages } = await getAlbums({
@@ -65,14 +75,50 @@ const Albums = () => {
       <Container>
         <Row className="mb-3">
           <Col>
+            <Form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const {
+                  filter: { value: filter },
+                } = e.currentTarget;
+                setQuery(filter);
+              }}
+            >
+              <Form.Label>Search</Form.Label>
+              <InputGroup className="mb-3">
+                <Button
+                  ref={queryRef}
+                  disabled={query.length === 0}
+                  type="submit"
+                >
+                  Go
+                </Button>
+                <Form.Control
+                  name="filter"
+                  type="text"
+                  placeholder="title, username, tags..."
+                  defaultValue={query}
+                  onChange={(e) => {
+                    if (e.currentTarget.value.length === 0) {
+                      queryRef.current.setAttribute("disabled", true);
+                    } else {
+                      queryRef.current.removeAttribute("disabled");
+                    }
+                  }}
+                />
+              </InputGroup>
+            </Form>
+          </Col>
+          <Col>
             <Form.Label>Sort by</Form.Label>
             <Form.Select
+              defaultValue={sort}
               onChange={(e) => {
                 setSort(e.currentTarget.value);
               }}
             >
               {["created", "title", "userName"].map((field) => (
-                <option key={field} value={field} selected={sort === field}>
+                <option key={field} value={field}>
                   {field.toLocaleLowerCase()}
                 </option>
               ))}
@@ -81,16 +127,13 @@ const Albums = () => {
           <Col>
             <Form.Label>Direction</Form.Label>
             <Form.Select
+              defaultValue={direction}
               onChange={(e) => {
                 setDirection(e.currentTarget.value);
               }}
             >
               {["descending", "ascending"].map((field) => (
-                <option
-                  key={field}
-                  value={field}
-                  selected={direction === field}
-                >
+                <option key={field} value={field}>
                   {field.toLocaleLowerCase()}
                 </option>
               ))}
