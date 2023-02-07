@@ -22,13 +22,15 @@ export const newAlbum = async (albumToken) => {
 };
 
 export const getAlbums = async (params) => {
-  const { page, direction, sort } = params;
-  const albums = await fetch(
-    `${AlbumUrl}?page=${page}&direction=${direction}&sort=${sort}`,
-    {
-      method: "GET",
-    }
-  ).then((response) => response.json());
+  const { page, direction, sort, query } = params;
+  let urlQuery = `${AlbumUrl}?page=${page}&direction=${direction}&sort=${sort}`;
+  if (query) {
+    urlQuery = `${urlQuery}&query=${query}`;
+  }
+
+  const albums = await fetch(urlQuery, {
+    method: "GET",
+  }).then((response) => response.json());
   return albums;
 };
 

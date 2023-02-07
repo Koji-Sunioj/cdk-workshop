@@ -4,10 +4,11 @@ import Container from "react-bootstrap/Container";
 
 import { useContext } from "react";
 import { globalContext } from "../App";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function NavBar() {
   const [login] = useContext(globalContext);
+  const currentLocation = useLocation();
   return (
     <Navbar bg="dark" expand="lg" variant="dark">
       <Container>
@@ -17,7 +18,7 @@ function NavBar() {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/albums">
+            <Nav.Link as={Link} to="/albums" state={{ currentLocation }}>
               Photo Albums
             </Nav.Link>
             {login !== null ? (

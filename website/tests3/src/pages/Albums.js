@@ -6,58 +6,51 @@ import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import Pagination from "react-bootstrap/Pagination";
 import InputGroup from "react-bootstrap/InputGroup";
-import ToggleButton from "react-bootstrap/ToggleButton";
 
 import moment from "moment";
-import { Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import { Link, useSearchParams, useLocation } from "react-router-dom";
 
 import { getAlbums } from "../utils/albumApi";
 import CardSkeleton from "../components/CardSkeleton";
 
 const Albums = () => {
   const queryRef = useRef();
+  const { state } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [albums, setAlbums] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pages, setPages] = useState([]);
-  const [page, setCurrentPage] = useState(
-    Number(searchParams.get("page")) || 1
-  );
-  const [direction, setDirection] = useState(
-    searchParams.get("direction") || "descending"
-  );
-  const [sort, setSort] = useState(searchParams.get("sort") || "created");
-  const [query, setQuery] = useState(searchParams.get("query") || "");
+
+  const queryParams = {
+    page: Number(searchParams.get("page")) || 1,
+    direction: searchParams.get("direction") || "descending",
+    sort: searchParams.get("sort") || "created",
+  };
+  let query = searchParams.get("query") || "";
+  let pathname = null;
+  if (query.length > 0) {
+    queryParams.query = query;
+  }
+  if (state !== null && state.hasOwnProperty("currentLocation")) {
+    ({
+      currentLocation: { pathname },
+    } = state);
+  }
 
   useEffect(() => {
-    if (
-      albums === null ||
-      page !== Number(searchParams.get("page")) ||
-      direction !== searchParams.get("direction") ||
-      sort !== searchParams.get("sort") ||
-      query !== searchParams.get("query")
-    ) {
-      const queryParams = {
-        page: page,
-        direction: direction,
-        sort: sort,
-        query: query,
-      };
+    if (albums === null || pathname === "/albums") {
+      document.getElementById("filter").value = query;
       setSearchParams(queryParams);
       setLoading(true);
       fetchAlbums();
     } else {
       setLoading(false);
     }
-  }, [albums, page, direction, sort, query]);
+  }, [albums, pathname]);
 
   const fetchAlbums = async () => {
-    const { albums, pages: fetchedPages } = await getAlbums({
-      page: page,
-      direction: direction,
-      sort: sort,
-    });
+    const { albums, pages: fetchedPages } = await getAlbums(queryParams);
     const realPages = new Array(Number(fetchedPages))
       .fill(null)
       .map((v, n) => n + 1);
@@ -69,6 +62,15 @@ const Albums = () => {
   };
 
   const shouldRender = albums !== null && albums.length > 0;
+  const { page, direction, sort } = queryParams;
+
+  const mutateParams = (fields) => {
+    fields.forEach((value) => {
+      queryParams[value.field] = value.value;
+    });
+    setSearchParams(queryParams);
+    setAlbums(null);
+  };
 
   return (
     <>
@@ -81,7 +83,10 @@ const Albums = () => {
                 const {
                   filter: { value: filter },
                 } = e.currentTarget;
-                setQuery(filter);
+                mutateParams([
+                  { field: "query", value: filter },
+                  { field: "page", value: 1 },
+                ]);
               }}
             >
               <Form.Label>Search</Form.Label>
@@ -95,12 +100,18 @@ const Albums = () => {
                 </Button>
                 <Form.Control
                   name="filter"
+                  id="filter"
                   type="text"
                   placeholder="title, username, tags..."
                   defaultValue={query}
                   onChange={(e) => {
-                    if (e.currentTarget.value.length === 0) {
+                    const {
+                      currentTarget: { value },
+                    } = e;
+                    if (value.length === 0) {
+                      delete queryParams.query;
                       queryRef.current.setAttribute("disabled", true);
+                      mutateParams([{ field: "page", value: 1 }]);
                     } else {
                       queryRef.current.removeAttribute("disabled");
                     }
@@ -112,9 +123,9 @@ const Albums = () => {
           <Col>
             <Form.Label>Sort by</Form.Label>
             <Form.Select
-              defaultValue={sort}
+              value={sort}
               onChange={(e) => {
-                setSort(e.currentTarget.value);
+                mutateParams([{ field: "sort", value: e.currentTarget.value }]);
               }}
             >
               {["created", "title", "userName"].map((field) => (
@@ -127,9 +138,11 @@ const Albums = () => {
           <Col>
             <Form.Label>Direction</Form.Label>
             <Form.Select
-              defaultValue={direction}
+              value={direction}
               onChange={(e) => {
-                setDirection(e.currentTarget.value);
+                mutateParams([
+                  { field: "direction", value: e.currentTarget.value },
+                ]);
               }}
             >
               {["descending", "ascending"].map((field) => (
@@ -142,6 +155,9 @@ const Albums = () => {
         </Row>
 
         {loading && <CardSkeleton />}
+        {albums !== null && albums.length === 0 && (
+          <h3>No Albums match that query</h3>
+        )}
         {shouldRender &&
           albums.map((album) => {
             const photos = album.photos.sort((a, b) =>
@@ -180,7 +196,7 @@ const Albums = () => {
                 key={number}
                 active={number === page}
                 onClick={() => {
-                  setCurrentPage(number);
+                  mutateParams([{ field: "page", value: number }]);
                   window.scrollTo(0, 0);
                 }}
               >

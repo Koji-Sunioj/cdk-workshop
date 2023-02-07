@@ -61,10 +61,25 @@ exports.handler = async function (event) {
       returnObject = { album: { ...album } };
       break;
     case "GET /albums":
+      const hasQuery = queryStringParameters !== null;
+      const hasFilter = hasQuery && "query" in queryStringParameters;
+
+      if (hasFilter) {
+        const { query } = queryStringParameters;
+        dbParams = {
+          ...dbParams,
+          FilterExpression:
+            "contains(tags, :query) OR contains(title, :query) OR contains(userName, :query)",
+          ExpressionAttributeValues: { ":query": query },
+        };
+      }
+
       let { Items: albums, Count } = await docClient.scan(dbParams).promise();
 
       const hasSort =
-        "sort" in queryStringParameters && "direction" in queryStringParameters;
+        hasQuery &&
+        "sort" in queryStringParameters &&
+        "direction" in queryStringParameters;
 
       if (hasSort) {
         const { sort, direction } = queryStringParameters;
@@ -75,7 +90,7 @@ exports.handler = async function (event) {
           a[sort] > b[sort] ? next : b[sort] > a[sort] ? prev : 0
         );
       }
-      const hasPage = "page" in queryStringParameters;
+      const hasPage = hasQuery && "page" in queryStringParameters;
       if (hasPage) {
         const { page } = queryStringParameters;
         const truPage = 5 * Number(page);
