@@ -21,15 +21,19 @@ export const newAlbum = async (albumToken) => {
   return statusCode;
 };
 
-export const getAlbums = async () => {
-  const albums = await fetch(AlbumUrl, { method: "GET" }).then((response) =>
-    response.json()
-  );
+export const getAlbums = async (params) => {
+  const { page, direction, sort } = params;
+  const albums = await fetch(
+    `${AlbumUrl}?page=${page}&direction=${direction}&sort=${sort}`,
+    {
+      method: "GET",
+    }
+  ).then((response) => response.json());
   return albums;
 };
 
 export const getAlbum = async (albumId) => {
-  const album = await fetch(`${AlbumUrl}${albumId}`, { method: "GET" }).then(
+  const album = await fetch(`${AlbumUrl}/${albumId}`, { method: "GET" }).then(
     (response) => response.json()
   );
   return album;
@@ -37,7 +41,7 @@ export const getAlbum = async (albumId) => {
 
 export const patchAlbum = async (albumTokenAlbumId) => {
   const { album, token, albumId } = albumTokenAlbumId;
-  const statusCode = await fetch(`${AlbumUrl}${albumId}`, {
+  const statusCode = await fetch(`${AlbumUrl}/${albumId}`, {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(album),
@@ -47,7 +51,7 @@ export const patchAlbum = async (albumTokenAlbumId) => {
 
 export const deleteAlbum = async (albumIdToken) => {
   const { albumId, token } = albumIdToken;
-  const statusCode = await fetch(`${AlbumUrl}${albumId}`, {
+  const statusCode = await fetch(`${AlbumUrl}/${albumId}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   }).then((response) => response.status);
@@ -56,7 +60,7 @@ export const deleteAlbum = async (albumIdToken) => {
 
 export const deleteObject = async (albumidTokens3Object) => {
   const { albumId, token, s3Object } = albumidTokens3Object;
-  const statusCode = await fetch(`${AlbumUrl}${albumId}/${s3Object}`, {
+  const statusCode = await fetch(`${AlbumUrl}/${albumId}/${s3Object}`, {
     method: "DELETE",
     headers: { Authorization: `Bearer ${token}` },
   }).then((response) => response.status);

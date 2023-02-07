@@ -61,8 +61,31 @@ exports.handler = async function (event) {
       returnObject = { album: { ...album } };
       break;
     case "GET /albums":
-      const { Items: albums } = await docClient.scan(dbParams).promise();
-      returnObject = { albums: albums };
+      let { Items: albums, Count } = await docClient.scan(dbParams).promise();
+
+      const hasSort =
+        "sort" in queryStringParameters && "direction" in queryStringParameters;
+
+      if (hasSort) {
+        const { sort, direction } = queryStringParameters;
+        const next = direction === "ascending" ? 1 : -1;
+        const prev = direction === "ascending" ? -1 : 1;
+
+        albums.sort((a, b) =>
+          a[sort] > b[sort] ? next : b[sort] > a[sort] ? prev : 0
+        );
+      }
+      const hasPage = "page" in queryStringParameters;
+      if (hasPage) {
+        const { page } = queryStringParameters;
+        const truPage = 5 * Number(page);
+        albums = albums.slice(truPage - 5, truPage);
+      }
+
+      returnObject = {
+        albums: albums,
+        pages: Math.ceil(Count / 5),
+      };
       break;
     case "POST /albums":
       const newAlbum = JSON.parse(body);
@@ -73,6 +96,7 @@ exports.handler = async function (event) {
           Item: newAlbum,
         })
         .promise();
+
       returnObject = { ...newAlbum };
       break;
     case "DELETE /albums/{albumId}/{s3Object}":

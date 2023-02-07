@@ -155,7 +155,7 @@ export class CdkWorkshopStack extends cdk.Stack {
     s3Delete.addMethod("DELETE");
 
     this.albumEndPoint = new cdk.CfnOutput(this, "AlbumUrl", {
-      value: `${api.url}${albums.node.id}/`,
+      value: `${api.url}${albums.node.id}`,
     });
 
     this.albumInitEndPoint = new cdk.CfnOutput(this, "AlbumInitUrl", {
