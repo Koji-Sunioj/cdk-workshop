@@ -93,13 +93,13 @@ exports.handler = async function (event) {
       const hasPage = hasQuery && "page" in queryStringParameters;
       if (hasPage) {
         const { page } = queryStringParameters;
-        const truPage = 5 * Number(page);
-        albums = albums.slice(truPage - 5, truPage);
+        const truPage = 6 * Number(page);
+        albums = albums.slice(truPage - 6, truPage);
       }
 
       returnObject = {
         albums: albums,
-        pages: Math.ceil(Count / 5),
+        pages: Math.ceil(Count / 6),
       };
       break;
     case "POST /albums":

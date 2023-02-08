@@ -154,41 +154,73 @@ const Albums = () => {
           </Col>
         </Row>
 
-        {loading && <CardSkeleton />}
+        {loading &&
+          [1, 2].map((value) => (
+            <Row key={value}>
+              {[1, 2, 3].map((row) => (
+                <Col lg={4} key={row}>
+                  <CardSkeleton />
+                </Col>
+              ))}
+            </Row>
+          ))}
         {albums !== null && albums.length === 0 && (
           <h3>No Albums match that query</h3>
         )}
         {shouldRender &&
-          albums.map((album) => {
-            const photos = album.photos.sort((a, b) =>
-              a.order > b.order ? 1 : b.order > a.order ? -1 : 0
-            );
-            const { albumId, title, tags, userName } = album;
-            const created = moment(album.created).format("MMMM Do YYYY, H:mm");
+          [0, 3].map((value) => (
+            <Row key={value}>
+              {albums.slice(value, value + 3).map((album) => {
+                const photos = album.photos.sort((a, b) =>
+                  a.order > b.order ? 1 : b.order > a.order ? -1 : 0
+                );
+                const { albumId, title, tags, userName } = album;
+                const created = moment(album.created).format(
+                  "MMMM Do YYYY, H:mm"
+                );
 
-            return (
-              <Card className="mb-3" key={albumId} lg={5}>
-                <Card.Img variant="top" src={photos[0].url} />
-                <Card.Body>
-                  <Link to={`${albumId}`}>
-                    <Card.Title>{title}</Card.Title>
-                  </Link>
-                  <Card.Subtitle className="mb-2 text-muted">
-                    {created}
-                  </Card.Subtitle>
-                  <Card.Text>
-                    {photos.length} {photos.length === 1 ? "photo " : "photos "}
-                    by {userName}
-                  </Card.Text>
-                  {tags.map((tag) => (
-                    <Button variant="info" key={tag} style={{ margin: "3px" }}>
-                      {tag}
-                    </Button>
-                  ))}
-                </Card.Body>
-              </Card>
-            );
-          })}
+                return (
+                  <Col lg={4} key={albumId}>
+                    <Card className="mb-3">
+                      <Card.Img
+                        variant="top"
+                        src={photos[0].url}
+                        className="album-img"
+                      />
+                      <Card.Body>
+                        <Link to={`${albumId}`}>
+                          <Card.Title>{title}</Card.Title>
+                        </Link>
+                        <Card.Subtitle className="mb-2 text-muted">
+                          {created}
+                        </Card.Subtitle>
+                        <Card.Text>
+                          {photos.length}{" "}
+                          {photos.length === 1 ? "photo " : "photos "}
+                          by {userName}
+                        </Card.Text>
+                        {tags.map((tag) => (
+                          <Button
+                            variant="info"
+                            key={tag}
+                            style={{ margin: "3px" }}
+                            onClick={() => {
+                              mutateParams([
+                                { field: "query", value: tag },
+                                { field: "page", value: 1 },
+                              ]);
+                            }}
+                          >
+                            {tag}
+                          </Button>
+                        ))}
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+          ))}
         <Pagination>
           {pages.length > 0 &&
             pages.map((number) => (

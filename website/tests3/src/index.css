@@ -9,7 +9,7 @@ body {
 }
 
 html {
-  overflow-x: scroll;
+  overflow-y: scroll;
 }
 
 code {
@@ -29,6 +29,22 @@ code {
 .carousel-img {
   height: 50vw;
  
+}
+
+.album-img {
+  width: 200px;
+  height: 300px;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+@media screen and (max-width: 992px) {
+  .album-img {
+    
+    height: 100%;
+   
+  }
+  
 }
 
 

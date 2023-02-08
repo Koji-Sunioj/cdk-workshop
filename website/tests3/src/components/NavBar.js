@@ -9,6 +9,8 @@ import { Link, useLocation } from "react-router-dom";
 function NavBar() {
   const [login] = useContext(globalContext);
   const currentLocation = useLocation();
+
+  console.log(currentLocation);
   return (
     <Navbar bg="dark" expand="lg" variant="dark">
       <Container>
