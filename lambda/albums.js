@@ -72,6 +72,11 @@ exports.handler = async function (event) {
             "contains(tags, :query) OR contains(title, :query) OR contains(userName, :query)",
           ExpressionAttributeValues: { ":query": query },
         };
+        // dbParams = {
+        //   ...dbParams,
+        //   FilterExpression: "tags in :query",
+        //   ExpressionAttributeValues: { ":query": ["nature", "israel"] },
+        // };
       }
 
       let { Items: albums, Count } = await docClient.scan(dbParams).promise();

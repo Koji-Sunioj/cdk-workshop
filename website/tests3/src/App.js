@@ -18,7 +18,7 @@ export const globalContext = createContext();
 
 function App() {
   const [login, setLogin] = useState(null);
-
+  const [filterToggle, setFilterToggle] = useState(false);
   const userName = localStorage.getItem("userName");
   const AccessToken = localStorage.getItem("AccessToken");
   const shouldChcek =
@@ -42,7 +42,7 @@ function App() {
   return (
     <BrowserRouter>
       <globalContext.Provider value={[login, setLogin]}>
-        <NavBar />
+        <NavBar setFilterToggle={setFilterToggle} filterToggle={filterToggle} />
         <br />
         <Routes>
           <Route path="/albums/:albumId" element={<Album />} />
@@ -51,7 +51,10 @@ function App() {
             path="/albums/edit/:albumId"
             element={<AlbumForm task="edit" />}
           />
-          <Route path="/albums" element={<Albums />} />
+          <Route
+            path="/albums"
+            element={<Albums filterToggle={filterToggle} />}
+          />
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/" element={<HomePage />} />

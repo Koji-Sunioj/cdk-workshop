@@ -3,6 +3,7 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/esm/Row";
 import Col from "react-bootstrap/esm/Col";
 import Button from "react-bootstrap/Button";
+import Collapse from "react-bootstrap/Collapse";
 import Container from "react-bootstrap/Container";
 import Pagination from "react-bootstrap/Pagination";
 import InputGroup from "react-bootstrap/InputGroup";
@@ -14,7 +15,7 @@ import { Link, useSearchParams, useLocation } from "react-router-dom";
 import { getAlbums } from "../utils/albumApi";
 import CardSkeleton from "../components/CardSkeleton";
 
-const Albums = () => {
+const Albums = ({ filterToggle }) => {
   const queryRef = useRef();
   const { state } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -55,7 +56,6 @@ const Albums = () => {
       .fill(null)
       .map((v, n) => n + 1);
     setAlbums(albums);
-
     if (realPages.length !== pages.length) {
       setPages(realPages);
     }
@@ -75,87 +75,93 @@ const Albums = () => {
   return (
     <>
       <Container>
-        <Row className="mb-3">
-          <Col>
-            <Form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const {
-                  filter: { value: filter },
-                } = e.currentTarget;
-                mutateParams([
-                  { field: "query", value: filter },
-                  { field: "page", value: 1 },
-                ]);
-              }}
-            >
-              <Form.Label>Search</Form.Label>
-              <InputGroup className="mb-3">
-                <Button
-                  ref={queryRef}
-                  disabled={query.length === 0}
-                  type="submit"
-                >
-                  Go
-                </Button>
-                <Form.Control
-                  name="filter"
-                  id="filter"
-                  type="text"
-                  placeholder="title, username, tags..."
-                  defaultValue={query}
-                  onChange={(e) => {
+        <Collapse in={filterToggle}>
+          <div>
+            <Row className="mb-3">
+              <Col>
+                <Form
+                  onSubmit={(e) => {
+                    e.preventDefault();
                     const {
-                      currentTarget: { value },
-                    } = e;
-                    if (value.length === 0) {
-                      delete queryParams.query;
-                      queryRef.current.setAttribute("disabled", true);
-                      mutateParams([{ field: "page", value: 1 }]);
-                    } else {
-                      queryRef.current.removeAttribute("disabled");
-                    }
+                      filter: { value: filter },
+                    } = e.currentTarget;
+                    mutateParams([
+                      { field: "query", value: filter },
+                      { field: "page", value: 1 },
+                    ]);
                   }}
-                />
-              </InputGroup>
-            </Form>
-          </Col>
-          <Col>
-            <Form.Label>Sort by</Form.Label>
-            <Form.Select
-              value={sort}
-              onChange={(e) => {
-                mutateParams([{ field: "sort", value: e.currentTarget.value }]);
-              }}
-            >
-              {["created", "title", "userName"].map((field) => (
-                <option key={field} value={field}>
-                  {field.toLocaleLowerCase()}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-          <Col>
-            <Form.Label>Direction</Form.Label>
-            <Form.Select
-              value={direction}
-              onChange={(e) => {
-                mutateParams([
-                  { field: "direction", value: e.currentTarget.value },
-                ]);
-              }}
-            >
-              {["descending", "ascending"].map((field) => (
-                <option key={field} value={field}>
-                  {field.toLocaleLowerCase()}
-                </option>
-              ))}
-            </Form.Select>
-          </Col>
-        </Row>
+                >
+                  <Form.Label>Search</Form.Label>
+                  <InputGroup className="mb-3">
+                    <Button
+                      ref={queryRef}
+                      disabled={query.length === 0}
+                      type="submit"
+                    >
+                      Go
+                    </Button>
+                    <Form.Control
+                      name="filter"
+                      id="filter"
+                      type="text"
+                      placeholder="title, username, tags..."
+                      defaultValue={query}
+                      onChange={(e) => {
+                        const {
+                          currentTarget: { value },
+                        } = e;
+                        if (value.length === 0) {
+                          delete queryParams.query;
+                          queryRef.current.setAttribute("disabled", true);
+                          mutateParams([{ field: "page", value: 1 }]);
+                        } else {
+                          queryRef.current.removeAttribute("disabled");
+                        }
+                      }}
+                    />
+                  </InputGroup>
+                </Form>
+              </Col>
+              <Col>
+                <Form.Label>Sort by</Form.Label>
+                <Form.Select
+                  value={sort}
+                  onChange={(e) => {
+                    mutateParams([
+                      { field: "sort", value: e.currentTarget.value },
+                    ]);
+                  }}
+                >
+                  {["created", "title", "userName"].map((field) => (
+                    <option key={field} value={field}>
+                      {field.toLocaleLowerCase()}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+              <Col>
+                <Form.Label>Direction</Form.Label>
+                <Form.Select
+                  value={direction}
+                  onChange={(e) => {
+                    mutateParams([
+                      { field: "direction", value: e.currentTarget.value },
+                    ]);
+                  }}
+                >
+                  {["descending", "ascending"].map((field) => (
+                    <option key={field} value={field}>
+                      {field.toLocaleLowerCase()}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Col>
+            </Row>
+          </div>
+        </Collapse>
 
         {loading &&
-          [1, 2].map((value) => (
+          [1, 3].map((value) => (
             <Row key={value}>
               {[1, 2, 3].map((row) => (
                 <Col lg={4} key={row}>

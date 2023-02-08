@@ -102,7 +102,12 @@ const Album = () => {
           <Card.Text>{album.userName}</Card.Text>
           <Stack direction="horizontal" gap={3} className="mb-3">
             {album.tags.map((tag) => (
-              <Button variant="info" key={tag}>
+              <Button
+                variant="info"
+                key={tag}
+                as={Link}
+                to={`/albums?query=${tag}`}
+              >
                 {tag}
               </Button>
             ))}
