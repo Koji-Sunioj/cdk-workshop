@@ -44,7 +44,7 @@ function App() {
     <BrowserRouter>
       <globalContext.Provider value={[login, setLogin]}>
         <NavBar setFilterToggle={setFilterToggle} filterToggle={filterToggle} />
-        <br />
+
         <RemoveTrailingSlash />
         <Routes>
           <Route path="/albums/:albumId" element={<Album />} />

@@ -29,9 +29,11 @@ const Albums = ({ filterToggle }) => {
     page: Number(searchParams.get("page")) || 1,
     direction: searchParams.get("direction") || "descending",
     sort: searchParams.get("sort") || "created",
+    type: searchParams.get("type") || "text",
   };
   let query = searchParams.get("query") || "";
   let pathname = null;
+
   if (query.length > 0) {
     queryParams.query = query;
   }
@@ -60,6 +62,7 @@ const Albums = ({ filterToggle }) => {
   }, [albums, fetchFlag, pathname]);
 
   const fetchAlbums = async () => {
+    console.log("api");
     const { albums, pages: fetchedPages } = await getAlbums(queryParams);
     const realPages = new Array(Number(fetchedPages))
       .fill(null)
@@ -82,181 +85,227 @@ const Albums = ({ filterToggle }) => {
     setFetchFlag("get");
   };
 
+  const { type } = queryParams;
+
   return (
-    <>
-      <Container>
-        <Collapse in={filterToggle}>
-          <div>
-            <Row className="mb-3">
-              <Col>
-                <Form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const {
-                      filter: { value: filter },
-                    } = e.currentTarget;
-                    mutateParams([
-                      { field: "query", value: filter },
-                      { field: "page", value: 1 },
-                    ]);
-                  }}
-                >
-                  <Form.Label>Search</Form.Label>
-                  <InputGroup className="mb-3">
-                    <Button
-                      ref={queryRef}
-                      disabled={query.length === 0 || getting}
-                      type="submit"
-                    >
-                      Go
-                    </Button>
-                    <Form.Control
-                      disabled={getting}
-                      name="filter"
-                      id="filter"
-                      type="text"
-                      placeholder="title, username, tags..."
-                      defaultValue={query}
-                      onChange={(e) => {
-                        const {
-                          currentTarget: { value },
-                        } = e;
-                        if (value.length === 0) {
-                          delete queryParams.query;
-                          queryRef.current.setAttribute("disabled", true);
-                          mutateParams([{ field: "page", value: 1 }]);
-                        } else {
-                          queryRef.current.removeAttribute("disabled");
-                        }
-                      }}
-                    />
-                  </InputGroup>
-                </Form>
-              </Col>
-              <Col>
-                <Form.Label>Sort by</Form.Label>
-                <Form.Select
-                  value={sort}
-                  disabled={getting}
-                  onChange={(e) => {
-                    mutateParams([
-                      { field: "sort", value: e.currentTarget.value },
-                    ]);
-                  }}
-                >
-                  {["created", "title", "userName"].map((field) => (
-                    <option key={field} value={field}>
-                      {field.toLocaleLowerCase()}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-              <Col>
-                <Form.Label>Direction</Form.Label>
-                <Form.Select
-                  disabled={getting}
-                  value={direction}
-                  onChange={(e) => {
-                    mutateParams([
-                      { field: "direction", value: e.currentTarget.value },
-                    ]);
-                  }}
-                >
-                  {["descending", "ascending"].map((field) => (
-                    <option key={field} value={field}>
-                      {field.toLocaleLowerCase()}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-            </Row>
-          </div>
-        </Collapse>
-
-        {loading &&
-          [1, 3].map((value) => (
-            <Row key={value}>
-              {[1, 2, 3].map((row) => (
-                <Col lg={4} key={row}>
-                  <CardSkeleton />
-                </Col>
-              ))}
-            </Row>
-          ))}
-        {albums !== null && albums.length === 0 && (
-          <h3>No Albums match that query</h3>
-        )}
-        {shouldRender &&
-          [0, 3].map((value) => (
-            <Row key={value}>
-              {albums.slice(value, value + 3).map((album) => {
-                const photos = album.photos.sort((a, b) =>
-                  a.order > b.order ? 1 : b.order > a.order ? -1 : 0
-                );
-                const { albumId, title, tags, userName } = album;
-                const created = moment(album.created).format(
-                  "MMMM Do YYYY, H:mm"
-                );
-
-                return (
-                  <Col lg={4} key={albumId}>
-                    <Card className="mb-3">
-                      <Card.Img
-                        variant="top"
-                        src={photos[0].url}
-                        className="album-img"
-                      />
-                      <Card.Body>
-                        <Link to={`${albumId}`}>
-                          <Card.Title>{title}</Card.Title>
-                        </Link>
-                        <Card.Subtitle className="mb-2 text-muted">
-                          {created}
-                        </Card.Subtitle>
-                        <Card.Text>
-                          {photos.length}{" "}
-                          {photos.length === 1 ? "photo " : "photos "}
-                          by {userName}
-                        </Card.Text>
-                        {tags.map((tag) => (
-                          <Button
-                            variant="info"
-                            key={tag}
-                            style={{ margin: "3px" }}
-                            onClick={() => {
-                              mutateParams([
-                                { field: "query", value: tag },
-                                { field: "page", value: 1 },
-                              ]);
-                            }}
-                          >
-                            {tag}
-                          </Button>
-                        ))}
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                );
-              })}
-            </Row>
-          ))}
-        <Pagination>
-          {pages.length > 0 &&
-            pages.map((number) => (
-              <Pagination.Item
-                key={number}
-                active={number === page}
-                onClick={() => {
-                  mutateParams([{ field: "page", value: number }]);
-                  window.scrollTo(0, 0);
+    <Container>
+      <Collapse in={filterToggle}>
+        <div>
+          <Row>
+            <Col lg={3} className="mb-2">
+              <Form.Label>Filter type</Form.Label>
+              <div
+                style={{
+                  padding: "0.375rem 0.75rem",
+                  border: "1px solid #ced4da",
+                  borderRadius: "8px",
                 }}
               >
-                {number}
-              </Pagination.Item>
+                <div>
+                  <Form.Check
+                    inline
+                    label="Free text"
+                    name="queryFilter"
+                    type="radio"
+                    checked={type === "text"}
+                    onChange={(e) => {
+                      mutateParams([
+                        { field: "type", value: "text" },
+                        { field: "page", value: 1 },
+                      ]);
+                    }}
+                  />
+                  <Form.Check
+                    inline
+                    label="Tags"
+                    name="tagsFilter"
+                    type="radio"
+                    checked={type === "tags"}
+                    onChange={(e) => {
+                      delete queryParams.query;
+                      queryRef.current.setAttribute("disabled", true);
+                      mutateParams([
+                        { field: "type", value: "tags" },
+                        { field: "page", value: 1 },
+                      ]);
+                    }}
+                  />
+                </div>
+              </div>
+            </Col>
+            <Col lg={3} className="mb-2">
+              <Form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const {
+                    filter: { value: filter },
+                  } = e.currentTarget;
+                  mutateParams([
+                    { field: "query", value: filter },
+                    { field: "page", value: 1 },
+                  ]);
+                }}
+              >
+                <Form.Label>Search</Form.Label>
+                <InputGroup>
+                  <Button
+                    ref={queryRef}
+                    disabled={query.length === 0 || getting}
+                    type="submit"
+                  >
+                    Go
+                  </Button>
+                  <Form.Control
+                    disabled={getting}
+                    name="filter"
+                    id="filter"
+                    type="text"
+                    placeholder={
+                      type === "text"
+                        ? "title, username, tags..."
+                        : "nature, israel, photography..."
+                    }
+                    defaultValue={query}
+                    onChange={(e) => {
+                      const {
+                        currentTarget: { value },
+                      } = e;
+                      if (value.length === 0) {
+                        delete queryParams.query;
+                        queryRef.current.setAttribute("disabled", true);
+                        mutateParams([{ field: "page", value: 1 }]);
+                      } else {
+                        queryRef.current.removeAttribute("disabled");
+                      }
+                    }}
+                  />
+                </InputGroup>
+              </Form>
+            </Col>
+
+            <Col lg={3} className="mb-2">
+              <Form.Label>Sort by</Form.Label>
+              <Form.Select
+                value={sort}
+                disabled={getting}
+                onChange={(e) => {
+                  mutateParams([
+                    { field: "sort", value: e.currentTarget.value },
+                  ]);
+                }}
+              >
+                {["created", "title", "userName"].map((field) => (
+                  <option key={field} value={field}>
+                    {field.toLocaleLowerCase()}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+            <Col lg={3} className="mb-2">
+              <Form.Label>Direction</Form.Label>
+              <Form.Select
+                disabled={getting}
+                value={direction}
+                onChange={(e) => {
+                  mutateParams([
+                    { field: "direction", value: e.currentTarget.value },
+                  ]);
+                }}
+              >
+                {["descending", "ascending"].map((field) => (
+                  <option key={field} value={field}>
+                    {field.toLocaleLowerCase()}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+          </Row>
+        </div>
+      </Collapse>
+
+      {loading &&
+        [1, 3].map((value) => (
+          <Row key={value}>
+            {[1, 2, 3].map((row) => (
+              <Col lg={4} key={row}>
+                <CardSkeleton />
+              </Col>
             ))}
-        </Pagination>
-      </Container>
-    </>
+          </Row>
+        ))}
+      {albums !== null && albums.length === 0 && (
+        <h3>No Albums match that query</h3>
+      )}
+      {shouldRender &&
+        [0, 3].map((value) => (
+          <Row key={value}>
+            {albums.slice(value, value + 3).map((album) => {
+              const photos = album.photos.sort((a, b) =>
+                a.order > b.order ? 1 : b.order > a.order ? -1 : 0
+              );
+              const { albumId, title, tags, userName } = album;
+              const created = moment(album.created).format(
+                "MMMM Do YYYY, H:mm"
+              );
+
+              return (
+                <Col lg={4} key={albumId}>
+                  <Card className="mb-3">
+                    <Card.Img
+                      variant="top"
+                      src={photos[0].url}
+                      className="album-img"
+                    />
+                    <Card.Body>
+                      <Link to={`${albumId}`}>
+                        <Card.Title>{title}</Card.Title>
+                      </Link>
+                      <Card.Subtitle className="mb-2 text-muted">
+                        {created}
+                      </Card.Subtitle>
+                      <Card.Text>
+                        {photos.length}{" "}
+                        {photos.length === 1 ? "photo " : "photos "}
+                        by {userName}
+                      </Card.Text>
+                      {tags.map((tag) => (
+                        <Button
+                          variant="info"
+                          key={tag}
+                          style={{ margin: "3px" }}
+                          onClick={() => {
+                            mutateParams([
+                              { field: "query", value: tag },
+                              { field: "page", value: 1 },
+                            ]);
+                          }}
+                        >
+                          {tag}
+                        </Button>
+                      ))}
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
+          </Row>
+        ))}
+      <Pagination>
+        {pages.length > 0 &&
+          pages.map((number) => (
+            <Pagination.Item
+              key={number}
+              active={number === page}
+              onClick={() => {
+                mutateParams([{ field: "page", value: number }]);
+                window.scrollTo(0, 0);
+              }}
+            >
+              {number}
+            </Pagination.Item>
+          ))}
+      </Pagination>
+    </Container>
   );
 };
 

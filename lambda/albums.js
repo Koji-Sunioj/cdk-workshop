@@ -42,6 +42,19 @@ exports.handler = async function (event) {
       statusCode = 403;
       returnObject = { message: "not allowed to alter resource" };
       break;
+
+    case "GET /albums/tags":
+      dbParams = {
+        ...dbParams,
+        ProjectionExpression: "tags",
+      };
+      const { Items } = await docClient.scan(dbParams).promise();
+      const filtered = [].concat(
+        ...[].concat(...Items.map((item) => item.tags.map((value) => value)))
+      );
+      returnObject = { tags: [...new Set(filtered)] };
+      break;
+
     case "GET /albums/init":
       const { key, content_type } = queryStringParameters;
       let buckParams = {
@@ -62,21 +75,34 @@ exports.handler = async function (event) {
       break;
     case "GET /albums":
       const hasQuery = queryStringParameters !== null;
-      const hasFilter = hasQuery && "query" in queryStringParameters;
+      const hasFilter =
+        hasQuery &&
+        "query" in queryStringParameters &&
+        "type" in queryStringParameters;
 
       if (hasFilter) {
-        const { query } = queryStringParameters;
-        dbParams = {
-          ...dbParams,
-          FilterExpression:
-            "contains(tags, :query) OR contains(title, :query) OR contains(userName, :query)",
-          ExpressionAttributeValues: { ":query": query },
-        };
-        // dbParams = {
-        //   ...dbParams,
-        //   FilterExpression: "tags in :query",
-        //   ExpressionAttributeValues: { ":query": ["nature", "israel"] },
-        // };
+        const { query, type } = queryStringParameters;
+        if (type === "text") {
+          dbParams = {
+            ...dbParams,
+            FilterExpression:
+              "contains(tags, :query) OR contains(title, :query) OR contains(userName, :query)",
+            ExpressionAttributeValues: { ":query": query },
+          };
+        } else if (type === "tags") {
+          let filterString = [];
+          let expressionObject = {};
+          query.split(",").forEach((tag, n) => {
+            const field = `:tag${String(n + 1)}`;
+            expressionObject[field] = tag;
+            filterString.push(`contains(tags,${field})`);
+          });
+          dbParams = {
+            ...dbParams,
+            FilterExpression: filterString.join(" AND "),
+            ExpressionAttributeValues: expressionObject,
+          };
+        }
       }
 
       let { Items: albums, Count } = await docClient.scan(dbParams).promise();

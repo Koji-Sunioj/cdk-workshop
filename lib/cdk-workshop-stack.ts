@@ -146,6 +146,9 @@ export class CdkWorkshopStack extends cdk.Stack {
     const init = albums.addResource("init");
     init.addMethod("GET");
 
+    const tags = albums.addResource("tags");
+    tags.addMethod("GET");
+
     const album = albums.addResource("{albumId}");
     album.addMethod("GET");
     album.addMethod("DELETE");

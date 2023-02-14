@@ -23,7 +23,7 @@ function NavBar({ setFilterToggle, filterToggle }) {
   }, [pathname]);
 
   return (
-    <Navbar bg="dark" expand="lg" variant="dark">
+    <Navbar bg="dark" expand="lg" variant="dark" className="mb-3">
       <Container>
         <Navbar.Brand as={Link} to="/">
           Iron Pond Productions
