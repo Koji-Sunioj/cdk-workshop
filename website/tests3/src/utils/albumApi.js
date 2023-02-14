@@ -21,6 +21,13 @@ export const newAlbum = async (albumToken) => {
   return statusCode;
 };
 
+export const getTags = async () => {
+  const tags = await fetch(`${AlbumUrl}/tags`, {
+    method: "GET",
+  }).then((response) => response.json());
+  return tags;
+};
+
 export const getAlbums = async (params) => {
   const { page, direction, sort, query, type } = params;
   let urlQuery = `${AlbumUrl}?page=${page}&direction=${direction}&sort=${sort}`;

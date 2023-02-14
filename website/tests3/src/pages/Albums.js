@@ -12,7 +12,7 @@ import moment from "moment";
 import { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams, useLocation } from "react-router-dom";
 
-import { getAlbums } from "../utils/albumApi";
+import { getAlbums, getTags } from "../utils/albumApi";
 import CardSkeleton from "../components/CardSkeleton";
 
 const Albums = ({ filterToggle }) => {
@@ -20,6 +20,7 @@ const Albums = ({ filterToggle }) => {
   const { state } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [pages, setPages] = useState([]);
+  const [queryTags, setQueryTags] = useState(null);
   const [albums, setAlbums] = useState(null);
   const [loading, setLoading] = useState(false);
   const [getting, setGetting] = useState(false);
@@ -33,6 +34,7 @@ const Albums = ({ filterToggle }) => {
   };
   let query = searchParams.get("query") || "";
   let pathname = null;
+  const { type } = queryParams;
 
   if (query.length > 0) {
     queryParams.query = query;
@@ -44,10 +46,11 @@ const Albums = ({ filterToggle }) => {
   }
 
   useEffect(() => {
-    document.getElementById("filter").value = query;
+    // document.getElementById("filter").value = query;
     if (albums === null && fetchFlag === "init") {
       setLoading(true);
       fetchAlbums();
+      fetchTags();
     } else if (fetchFlag === "get" || pathname === "/albums") {
       setGetting(true);
       setSearchParams(queryParams);
@@ -61,8 +64,14 @@ const Albums = ({ filterToggle }) => {
     }
   }, [albums, fetchFlag, pathname]);
 
+  const fetchTags = async () => {
+    console.log("tag api");
+    const { tags } = await getTags();
+    setQueryTags(tags);
+  };
+
   const fetchAlbums = async () => {
-    console.log("api");
+    console.log("query api");
     const { albums, pages: fetchedPages } = await getAlbums(queryParams);
     const realPages = new Array(Number(fetchedPages))
       .fill(null)
@@ -84,8 +93,6 @@ const Albums = ({ filterToggle }) => {
     setSearchParams(queryParams);
     setFetchFlag("get");
   };
-
-  const { type } = queryParams;
 
   return (
     <Container>
@@ -109,6 +116,7 @@ const Albums = ({ filterToggle }) => {
                     type="radio"
                     checked={type === "text"}
                     onChange={(e) => {
+                      delete queryParams.query;
                       mutateParams([
                         { field: "type", value: "text" },
                         { field: "page", value: 1 },
@@ -140,45 +148,87 @@ const Albums = ({ filterToggle }) => {
                   const {
                     filter: { value: filter },
                   } = e.currentTarget;
-                  mutateParams([
-                    { field: "query", value: filter },
-                    { field: "page", value: 1 },
-                  ]);
+                  switch (type) {
+                    case "text":
+                      mutateParams([
+                        { field: "query", value: filter },
+                        { field: "page", value: 1 },
+                      ]);
+                      break;
+                    case "tags":
+                      if (queryTags.includes(filter)) console.log(query);
+                      const refined =
+                        query.length > 0 ? query + "," + filter : filter;
+                      document.getElementById("filter").value = "";
+                      mutateParams([
+                        { field: "query", value: refined },
+                        { field: "page", value: 1 },
+                      ]);
+                      break;
+                  }
                 }}
               >
                 <Form.Label>Search</Form.Label>
                 <InputGroup>
                   <Button
                     ref={queryRef}
-                    disabled={query.length === 0 || getting}
+                    disabled={query.length === 0 || getting || type === "tags"}
                     type="submit"
                   >
                     Go
                   </Button>
-                  <Form.Control
-                    disabled={getting}
-                    name="filter"
-                    id="filter"
-                    type="text"
-                    placeholder={
-                      type === "text"
-                        ? "title, username, tags..."
-                        : "nature, israel, photography..."
-                    }
-                    defaultValue={query}
-                    onChange={(e) => {
-                      const {
-                        currentTarget: { value },
-                      } = e;
-                      if (value.length === 0) {
-                        delete queryParams.query;
-                        queryRef.current.setAttribute("disabled", true);
-                        mutateParams([{ field: "page", value: 1 }]);
-                      } else {
-                        queryRef.current.removeAttribute("disabled");
-                      }
-                    }}
-                  />
+                  {type === "text" && (
+                    <Form.Control
+                      disabled={getting}
+                      name="filter"
+                      id="filter"
+                      type="text"
+                      placeholder="nature, israel, photography..."
+                      defaultValue={query}
+                      onChange={(e) => {
+                        const {
+                          currentTarget: { value },
+                        } = e;
+                        if (value.length === 0) {
+                          delete queryParams.query;
+                          queryRef.current.setAttribute("disabled", true);
+                          mutateParams([{ field: "page", value: 1 }]);
+                        } else {
+                          queryRef.current.removeAttribute("disabled");
+                        }
+                      }}
+                    />
+                  )}
+                  {type === "tags" && (
+                    <>
+                      <Form.Control
+                        disabled={getting}
+                        name="filter"
+                        id="filter"
+                        placeholder="nature, israel, photography..."
+                        list="tags"
+                        onChange={(event) => {
+                          const {
+                            currentTarget: { value },
+                          } = event;
+                          if (value.length === 0) {
+                            delete queryParams.query;
+                            queryRef.current.setAttribute("disabled", true);
+                          } else if (queryTags.includes(value)) {
+                            queryRef.current.removeAttribute("disabled");
+                          }
+                        }}
+                      />
+                      <datalist id="tags" autoComplete="off">
+                        {queryTags !== null &&
+                          queryTags.map((tag) => {
+                            if (!query.split(",").includes(tag)) {
+                              return <option value={tag} key={tag} />;
+                            }
+                          })}
+                      </datalist>
+                    </>
+                  )}
                 </InputGroup>
               </Form>
             </Col>
@@ -220,6 +270,30 @@ const Albums = ({ filterToggle }) => {
               </Form.Select>
             </Col>
           </Row>
+          {type === "tags" && query.length > 0 && (
+            <Row className="mb-2">
+              <Col>
+                {query.split(",").map((tag) => (
+                  <Button
+                    variant="info"
+                    key={tag}
+                    style={{ margin: "3px" }}
+                    onClick={() => {
+                      const currentQuery = query.split(",");
+                      var index = currentQuery.indexOf(tag);
+                      currentQuery.splice(index, 1);
+                      mutateParams([
+                        { field: "query", value: currentQuery.join(",") },
+                        { field: "page", value: 1 },
+                      ]);
+                    }}
+                  >
+                    {tag}
+                  </Button>
+                ))}
+              </Col>
+            </Row>
+          )}
         </div>
       </Collapse>
 
@@ -274,8 +348,11 @@ const Albums = ({ filterToggle }) => {
                           key={tag}
                           style={{ margin: "3px" }}
                           onClick={() => {
+                            const refined =
+                              query.length > 0 ? query + "," + tag : tag;
                             mutateParams([
-                              { field: "query", value: tag },
+                              { field: "query", value: refined },
+                              { field: "type", value: "tags" },
                               { field: "page", value: 1 },
                             ]);
                           }}
