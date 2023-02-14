@@ -12,6 +12,7 @@ import HomePage from "./pages/HomePage";
 import NavBar from "./components/NavBar";
 import AlbumForm from "./pages/AlbumForm";
 
+import { RemoveTrailingSlash } from "./utils/removeSlash";
 import { verifiyToken } from "./utils/signUpApi";
 
 export const globalContext = createContext();
@@ -44,6 +45,7 @@ function App() {
       <globalContext.Provider value={[login, setLogin]}>
         <NavBar setFilterToggle={setFilterToggle} filterToggle={filterToggle} />
         <br />
+        <RemoveTrailingSlash />
         <Routes>
           <Route path="/albums/:albumId" element={<Album />} />
           <Route path="/create-album" element={<AlbumForm task="create" />} />
@@ -51,6 +53,7 @@ function App() {
             path="/albums/edit/:albumId"
             element={<AlbumForm task="edit" />}
           />
+
           <Route
             path="/albums"
             element={<Albums filterToggle={filterToggle} />}
@@ -58,7 +61,6 @@ function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/" element={<HomePage />} />
-
           <Route path="/forgot-password" element={<ForgotPw />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="*" element={<NotFound />} />

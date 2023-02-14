@@ -19,9 +19,11 @@ const Albums = ({ filterToggle }) => {
   const queryRef = useRef();
   const { state } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [pages, setPages] = useState([]);
   const [albums, setAlbums] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [pages, setPages] = useState([]);
+  const [getting, setGetting] = useState(false);
+  const [fetchFlag, setFetchFlag] = useState("init");
 
   const queryParams = {
     page: Number(searchParams.get("page")) || 1,
@@ -40,15 +42,22 @@ const Albums = ({ filterToggle }) => {
   }
 
   useEffect(() => {
-    if (albums === null || pathname === "/albums") {
-      document.getElementById("filter").value = query;
-      setSearchParams(queryParams);
+    document.getElementById("filter").value = query;
+    if (albums === null && fetchFlag === "init") {
       setLoading(true);
       fetchAlbums();
+    } else if (fetchFlag === "get" || pathname === "/albums") {
+      setGetting(true);
+      setSearchParams(queryParams);
+      fetchAlbums();
     } else {
+      setSearchParams(queryParams);
       setLoading(false);
+      setTimeout(() => {
+        setGetting(false);
+      }, 250);
     }
-  }, [albums, pathname]);
+  }, [albums, fetchFlag, pathname]);
 
   const fetchAlbums = async () => {
     const { albums, pages: fetchedPages } = await getAlbums(queryParams);
@@ -59,6 +68,7 @@ const Albums = ({ filterToggle }) => {
     if (realPages.length !== pages.length) {
       setPages(realPages);
     }
+    setFetchFlag("fetched");
   };
 
   const shouldRender = albums !== null && albums.length > 0;
@@ -69,7 +79,7 @@ const Albums = ({ filterToggle }) => {
       queryParams[value.field] = value.value;
     });
     setSearchParams(queryParams);
-    setAlbums(null);
+    setFetchFlag("get");
   };
 
   return (
@@ -95,12 +105,13 @@ const Albums = ({ filterToggle }) => {
                   <InputGroup className="mb-3">
                     <Button
                       ref={queryRef}
-                      disabled={query.length === 0}
+                      disabled={query.length === 0 || getting}
                       type="submit"
                     >
                       Go
                     </Button>
                     <Form.Control
+                      disabled={getting}
                       name="filter"
                       id="filter"
                       type="text"
@@ -126,6 +137,7 @@ const Albums = ({ filterToggle }) => {
                 <Form.Label>Sort by</Form.Label>
                 <Form.Select
                   value={sort}
+                  disabled={getting}
                   onChange={(e) => {
                     mutateParams([
                       { field: "sort", value: e.currentTarget.value },
@@ -142,6 +154,7 @@ const Albums = ({ filterToggle }) => {
               <Col>
                 <Form.Label>Direction</Form.Label>
                 <Form.Select
+                  disabled={getting}
                   value={direction}
                   onChange={(e) => {
                     mutateParams([

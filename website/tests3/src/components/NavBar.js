@@ -1,13 +1,12 @@
 import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
-import Button from "react-bootstrap/Button";
 import Container from "react-bootstrap/Container";
 import ButtonGroup from "react-bootstrap/ButtonGroup";
 import ToggleButton from "react-bootstrap/ToggleButton";
 
 import { useContext, useState, useEffect } from "react";
 import { globalContext } from "../App";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 function NavBar({ setFilterToggle, filterToggle }) {
   const [toggleFilterButton, setToggleFilterButton] = useState(false);
