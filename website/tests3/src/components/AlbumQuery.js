@@ -42,11 +42,7 @@ const AlbumQuery = ({
                   type="radio"
                   checked={type === "text"}
                   onChange={() => {
-                    delete queryParams.query;
-                    mutateParams([
-                      { field: "type", value: "text" },
-                      { field: "page", value: 1 },
-                    ]);
+                    mutateParams({ type: "text" }, "radio");
                   }}
                 />
                 <Form.Check
@@ -56,11 +52,7 @@ const AlbumQuery = ({
                   type="radio"
                   checked={type === "tags"}
                   onChange={() => {
-                    delete queryParams.query;
-                    mutateParams([
-                      { field: "type", value: "tags" },
-                      { field: "page", value: 1 },
-                    ]);
+                    mutateParams({ type: "tags" }, "radio");
                   }}
                 />
               </div>
@@ -88,7 +80,7 @@ const AlbumQuery = ({
                       if (value.length === 0) {
                         delete queryParams.query;
                         queryRef.current.setAttribute("disabled", true);
-                        mutateParams([{ field: "page", value: 1 }]);
+                        mutateParams({ page: 1 });
                       } else {
                         queryRef.current.removeAttribute("disabled");
                       }
@@ -135,8 +127,11 @@ const AlbumQuery = ({
             <Form.Select
               value={sort}
               disabled={getting}
-              onChange={(e) => {
-                mutateParams([{ field: "sort", value: e.currentTarget.value }]);
+              onChange={(event) => {
+                const {
+                  currentTarget: { value },
+                } = event;
+                mutateParams({ sort: value });
               }}
             >
               {["created", "title", "userName"].map((field) => (
@@ -151,10 +146,11 @@ const AlbumQuery = ({
             <Form.Select
               disabled={getting}
               value={direction}
-              onChange={(e) => {
-                mutateParams([
-                  { field: "direction", value: e.currentTarget.value },
-                ]);
+              onChange={(event) => {
+                const {
+                  currentTarget: { value },
+                } = event;
+                mutateParams({ direction: value });
               }}
             >
               {["descending", "ascending"].map((field) => (
@@ -175,12 +171,15 @@ const AlbumQuery = ({
                   style={{ margin: "3px" }}
                   onClick={() => {
                     const currentQuery = query.split(",");
-                    var index = currentQuery.indexOf(tag);
+                    const index = currentQuery.indexOf(tag);
                     currentQuery.splice(index, 1);
-                    mutateParams([
-                      { field: "query", value: currentQuery.join(",") },
-                      { field: "page", value: 1 },
-                    ]);
+                    let mutateObject = { page: 1 };
+                    if (currentQuery.length === 0) {
+                      delete queryParams.query;
+                    } else {
+                      mutateObject.query = currentQuery.join(",");
+                    }
+                    mutateParams(mutateObject);
                   }}
                 >
                   {tag}

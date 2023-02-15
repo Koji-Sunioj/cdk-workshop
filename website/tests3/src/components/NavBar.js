@@ -6,7 +6,7 @@ import ToggleButton from "react-bootstrap/ToggleButton";
 
 import { useContext, useState, useEffect } from "react";
 import { globalContext } from "../App";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function NavBar({ setFilterToggle, filterToggle }) {
   const [toggleFilterButton, setToggleFilterButton] = useState(false);
@@ -31,7 +31,7 @@ function NavBar({ setFilterToggle, filterToggle }) {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/albums" state={{ currentLocation }}>
+            <Nav.Link as={Link} to="/albums" state={{ path: pathname }}>
               Photo Albums
             </Nav.Link>
             {login !== null ? (

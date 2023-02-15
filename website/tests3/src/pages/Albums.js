@@ -23,22 +23,21 @@ const Albums = ({ filterToggle }) => {
   const [getting, setGetting] = useState(false);
   const [fetchFlag, setFetchFlag] = useState("init");
 
-  const queryParams = {
+  let queryParams = {
     page: Number(searchParams.get("page")) || 1,
     direction: searchParams.get("direction") || "descending",
     sort: searchParams.get("sort") || "created",
     type: searchParams.get("type") || "text",
   };
   let query = searchParams.get("query") || "";
-  let pathname = null;
+  let isFromSamePage = false;
 
   if (query.length > 0) {
     queryParams.query = query;
   }
-  if (state !== null && state.hasOwnProperty("currentLocation")) {
-    ({
-      currentLocation: { pathname },
-    } = state);
+  if (state !== null && state.hasOwnProperty("path")) {
+    const { path } = state;
+    isFromSamePage = path === "/albums";
   }
 
   useEffect(() => {
@@ -50,7 +49,7 @@ const Albums = ({ filterToggle }) => {
     } else if (fetchFlag === "get") {
       setGetting(true);
       fetchAlbums();
-    } else if (pathname === "/albums") {
+    } else if (isFromSamePage) {
       document.getElementById("filter").value = "";
       setGetting(true);
       fetchAlbums();
@@ -62,9 +61,7 @@ const Albums = ({ filterToggle }) => {
           setGetting(false);
         }, 250);
     }
-  }, [albums, fetchFlag, pathname]);
-
-  console.log("rendered");
+  }, [albums, fetchFlag, isFromSamePage]);
 
   const fetchTags = async () => {
     const { tags } = await getTags();
@@ -83,12 +80,20 @@ const Albums = ({ filterToggle }) => {
     setFetchFlag("fetched");
   };
 
-  const mutateParams = (fields) => {
-    fields.forEach((value) => {
-      queryParams[value.field] = value.value;
-    });
+  const mutateParams = (newValues, origin = null) => {
+    Object.assign(queryParams, newValues);
+    switch (origin) {
+      case "radio":
+        if (queryParams.hasOwnProperty("query")) {
+          delete queryParams.query;
+          queryParams.page = 1;
+          setFetchFlag("get");
+        }
+        break;
+      default:
+        setFetchFlag("get");
+    }
     setSearchParams(queryParams);
-    setFetchFlag("get");
   };
 
   const createQuery = (event) => {
@@ -98,19 +103,13 @@ const Albums = ({ filterToggle }) => {
     } = event.currentTarget;
     switch (type) {
       case "text":
-        mutateParams([
-          { field: "query", value: filter },
-          { field: "page", value: 1 },
-        ]);
+        mutateParams({ query: filter, page: 1 });
         break;
       case "tags":
-        const refined = query.length > 0 ? query + "," + filter : filter;
+        const refined = query.length > 0 ? `${query},${filter}` : filter;
         document.getElementById("filter").value = "";
         queryRef.current.setAttribute("disabled", true);
-        mutateParams([
-          { field: "query", value: refined },
-          { field: "page", value: 1 },
-        ]);
+        mutateParams({ query: refined, page: 1 });
         break;
       default:
         return null;
@@ -158,7 +157,7 @@ const Albums = ({ filterToggle }) => {
               key={number}
               active={number === page}
               onClick={() => {
-                mutateParams([{ field: "page", value: number }]);
+                mutateParams({ page: number });
                 window.scrollTo(0, 0);
               }}
             >

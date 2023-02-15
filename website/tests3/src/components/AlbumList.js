@@ -47,11 +47,11 @@ const AlbumList = ({ albums, mutateParams, query }) => {
                         onClick={() => {
                           const queryString =
                             query.length > 0 ? `${query},${tag}` : tag;
-                          mutateParams([
-                            { field: "query", value: queryString },
-                            { field: "type", value: "tags" },
-                            { field: "page", value: 1 },
-                          ]);
+                          mutateParams({
+                            query: queryString,
+                            type: "tags",
+                            page: 1,
+                          });
                         }}
                       >
                         {tag}
