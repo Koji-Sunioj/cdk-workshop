@@ -88,7 +88,12 @@ const Album = () => {
               const { url, text, order } = photo;
               return (
                 <Carousel.Item key={order}>
-                  <img src={url} style={carouselImg} className="carousel-img" />
+                  <img
+                    alt={text}
+                    src={url}
+                    style={carouselImg}
+                    className="carousel-img"
+                  />
                   <Carousel.Caption>
                     <p>{text}</p>
                   </Carousel.Caption>
@@ -106,7 +111,7 @@ const Album = () => {
                 variant="info"
                 key={tag}
                 as={Link}
-                to={`/albums?query=${tag}`}
+                to={`/albums?query=${tag}&type=tags`}
               >
                 {tag}
               </Button>

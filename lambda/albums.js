@@ -42,7 +42,6 @@ exports.handler = async function (event) {
       statusCode = 403;
       returnObject = { message: "not allowed to alter resource" };
       break;
-
     case "GET /albums/tags":
       dbParams = {
         ...dbParams,
@@ -54,7 +53,6 @@ exports.handler = async function (event) {
       );
       returnObject = { tags: [...new Set(filtered)] };
       break;
-
     case "GET /albums/init":
       const { key, content_type } = queryStringParameters;
       let buckParams = {
@@ -63,7 +61,6 @@ exports.handler = async function (event) {
         Expires: 20,
         ContentType: content_type,
       };
-
       const url = await s3.getSignedUrl("putObject", buckParams);
       returnObject = { url: url };
       break;
@@ -104,7 +101,6 @@ exports.handler = async function (event) {
           };
         }
       }
-
       let { Items: albums, Count } = await docClient.scan(dbParams).promise();
 
       const hasSort =

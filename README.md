@@ -6,6 +6,9 @@ Small project to learn the basics of the AWS CDK. Features include:
 - Handling multiple Api Gateway paths, methods and request patterns
 - Configuring authentication to client via lambda / api gateway, using permissions, environment variables and AWS SDK to perform actions
 - Performing Crud operations via lambda / api gateway to and from Dynamodb and client
+- Understanding Dynamodb syntax, expressions and schema design
+
+I chose not to use Redux for this, to test what things would look like without it in React. Also skipped Typescript since my main goal is learning, and want to speed that up.
 
 # Welcome to your CDK TypeScript project
 
