@@ -89,16 +89,20 @@ const AlbumForm = ({ task }) => {
           const readForPatch = s3Existing.map(previewMapper);
 
           finalPhotos = readForPatch.concat(dynamoData);
+          console.log(finalPhotos);
           sendObject = {
+            token: AccessToken,
+            albumId: albumId,
             album: {
               title: title,
               albumId: albumId,
               photos: finalPhotos,
               tags: tags,
+              photoLength: finalPhotos.length,
             },
-            token: AccessToken,
-            albumId: albumId,
           };
+          console.log(sendObject);
+
           statusCode = await patchAlbum(sendObject);
         }
         break;
@@ -118,6 +122,7 @@ const AlbumForm = ({ task }) => {
               title: title,
               userName: userName,
               tags: tags,
+              photoLength: finalPhotos.length,
             },
           };
           statusCode = await newAlbum(sendObject);

@@ -72,7 +72,7 @@ exports.handler = async function (event) {
       break;
     case "GET /albums":
       dbParams.ProjectionExpression =
-        "albumId, created, photos[0], tags, title, username";
+        "albumId, created, photos[0], tags, title, userName, photoLength";
       const hasQuery = queryStringParameters !== null;
       const hasFilter =
         hasQuery &&
@@ -175,17 +175,18 @@ exports.handler = async function (event) {
       break;
     case "PATCH /albums/{albumId}":
       ({ albumId } = pathParameters);
-      const { photos, tags, title } = JSON.parse(body);
+      const { photos, tags, title, photoLength } = JSON.parse(body);
       await docClient
         .update({
           ...dbParams,
           Key: { albumId: albumId },
           UpdateExpression:
-            "SET photos = :photos, title = :title, tags = :tags",
+            "SET photos = :photos, title = :title, tags = :tags, photoLength = :photoLength",
           ExpressionAttributeValues: {
             ":photos": photos,
             ":title": title,
             ":tags": tags,
+            ":photoLength": photoLength,
           },
         })
         .promise();

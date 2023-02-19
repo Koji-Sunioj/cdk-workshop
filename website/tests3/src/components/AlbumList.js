@@ -16,7 +16,7 @@ const AlbumList = ({ albums, mutateParams, query }) => {
             const photos = album.photos.sort((a, b) =>
               a.order > b.order ? 1 : b.order > a.order ? -1 : 0
             );
-            const { albumId, title, tags, userName } = album;
+            const { albumId, title, tags, userName, photoLength } = album;
             const created = moment(album.created).format("MMMM Do YYYY, H:mm");
 
             return (
@@ -35,8 +35,7 @@ const AlbumList = ({ albums, mutateParams, query }) => {
                       {created}
                     </Card.Subtitle>
                     <Card.Text>
-                      {photos.length}{" "}
-                      {photos.length === 1 ? "photo " : "photos "}
+                      {photoLength} {photoLength === 1 ? "photo " : "photos "}
                       by {userName}
                     </Card.Text>
                     {tags.map((tag) => (
