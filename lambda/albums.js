@@ -71,6 +71,8 @@ exports.handler = async function (event) {
       returnObject = { album: { ...album } };
       break;
     case "GET /albums":
+      dbParams.ProjectionExpression =
+        "albumId, created, photos[0], tags, title, username";
       const hasQuery = queryStringParameters !== null;
       const hasFilter =
         hasQuery &&
