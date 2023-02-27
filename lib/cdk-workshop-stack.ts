@@ -23,6 +23,8 @@ export class CdkWorkshopStack extends cdk.Stack {
   public readonly albumEndPoint: cdk.CfnOutput;
   public readonly authEndPoint: cdk.CfnOutput;
   public readonly signUpEndPoint: cdk.CfnOutput;
+  public readonly accessEndpoint: cdk.CfnOutput;
+
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -186,8 +188,10 @@ export class CdkWorkshopStack extends cdk.Stack {
               "cognito-idp:AdminGetUser",
               "cognito-idp:AdminDeleteUser",
               "cognito-idp:AdminSetUserPassword",
+              "secretsmanager:GetSecretValue",
             ],
             resources: [
+              "arn:aws:secretsmanager:eu-north-1:531997442459:secret:devPw-DXiVdT",
               userPool.userPoolArn,
               `arn:aws:cognito-idp:${userPool.stack.region}:${userPool.stack.account}:userpool/${userPoolClient.userPoolClientId}`,
             ],
@@ -203,6 +207,14 @@ export class CdkWorkshopStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigw.Cors.ALL_ORIGINS,
       },
+    });
+
+    const appAccess = signUpapi.root.addResource("access");
+    const dev = appAccess.addResource("{secret}");
+    dev.addMethod("GET");
+
+    this.accessEndpoint = new cdk.CfnOutput(this, "AccessUrl", {
+      value: `${signUpapi.url}${appAccess.node.id}`,
     });
 
     //sign-in

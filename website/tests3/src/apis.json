@@ -5,6 +5,7 @@
     "SignUpEndpoint50C5A93C": "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/",
     "AuthUrl": "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/auth/",
     "AlbumEndpoint8A51EE77": "https://x08ewefhc6.execute-api.eu-north-1.amazonaws.com/prod/",
+    "AccessUrl": "https://4xtzbk0sc8.execute-api.eu-north-1.amazonaws.com/prod/access",
     "AlbumUrl": "https://x08ewefhc6.execute-api.eu-north-1.amazonaws.com/prod/albums"
   }
 }

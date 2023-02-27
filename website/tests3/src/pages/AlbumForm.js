@@ -87,9 +87,7 @@ const AlbumForm = ({ task }) => {
             (item) => item.type === "s3Object"
           );
           const readForPatch = s3Existing.map(previewMapper);
-
           finalPhotos = readForPatch.concat(dynamoData);
-          console.log(finalPhotos);
           sendObject = {
             token: AccessToken,
             albumId: albumId,
@@ -101,8 +99,6 @@ const AlbumForm = ({ task }) => {
               photoLength: finalPhotos.length,
             },
           };
-          console.log(sendObject);
-
           statusCode = await patchAlbum(sendObject);
         }
         break;

@@ -27,6 +27,18 @@ exports.handler = async function (event) {
   }
 
   switch (routeKey) {
+    case "GET /access/{secret}":
+      const secretsmanager = new AWS.SecretsManager();
+      const { secret } = pathParameters;
+      const { SecretString } = await secretsmanager
+        .getSecretValue({
+          SecretId: "devPw",
+        })
+        .promise();
+      const isDev = secret === JSON.parse(SecretString).secret ? true : false;
+      returnObject = { verified: isDev };
+      break;
+
     case "POST /auth":
       //sign up existing user
       ({ userName, password } = JSON.parse(body));

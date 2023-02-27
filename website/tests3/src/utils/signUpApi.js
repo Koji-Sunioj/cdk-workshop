@@ -1,6 +1,13 @@
 import apiUrls from "../apis.json";
 
-const { AuthUrl, SignUpUrl } = apiUrls.CdkWorkshopStack;
+const { AuthUrl, SignUpUrl, AccessUrl } = apiUrls.CdkWorkshopStack;
+
+export const devAccess = async (secret) => {
+  const isDev = await fetch(`${AccessUrl}/${secret}`, {
+    method: "GET",
+  }).then((response) => response.json());
+  return isDev;
+};
 
 export const authenticate = async (login) => {
   const token = await fetch(AuthUrl, {
