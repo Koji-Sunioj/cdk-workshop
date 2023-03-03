@@ -3,7 +3,9 @@ const service = new AWS.CognitoIdentityServiceProvider();
 const { returnHeaders } = require("./utils/headers.js");
 const { verifyToken } = require("./utils/token.js");
 
-exports.handler = async function (event) {
+import { APIGatewayEvent } from "aws-lambda";
+
+exports.handler = async function (event: APIGatewayEvent) {
   const {
     httpMethod,
     resource,
@@ -29,7 +31,7 @@ exports.handler = async function (event) {
   switch (routeKey) {
     case "GET /access/{secret}":
       const secretsmanager = new AWS.SecretsManager();
-      const { secret } = pathParameters;
+      const { secret } = pathParameters!;
       const { SecretString } = await secretsmanager
         .getSecretValue({
           SecretId: "devPw",
@@ -41,7 +43,7 @@ exports.handler = async function (event) {
 
     case "POST /auth":
       //sign up existing user
-      ({ userName, password } = JSON.parse(body));
+      ({ userName, password } = JSON.parse(body!));
       params = {
         AuthFlow: "USER_PASSWORD_AUTH",
         ClientId: process.env.USER_POOL_CLIENT,
@@ -60,7 +62,7 @@ exports.handler = async function (event) {
 
     case "HEAD /auth/{email}":
       //send reset code for existing user
-      ({ email } = pathParameters);
+      ({ email } = pathParameters!);
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
         Username: email,
@@ -70,8 +72,8 @@ exports.handler = async function (event) {
       break;
     case "PATCH /auth/{email} reset":
       //reset password existing user
-      ({ email } = pathParameters);
-      ({ password } = JSON.parse(body));
+      ({ email } = pathParameters!);
+      ({ password } = JSON.parse(body!));
       const { type } = await verifyToken(headers);
       if (type === "user") {
         params = {
@@ -90,8 +92,8 @@ exports.handler = async function (event) {
 
     case "PATCH /auth/{email} forgot":
       //confirm forgot password with conf code for existing user
-      ({ email } = pathParameters);
-      ({ confirmationCode, password } = JSON.parse(body));
+      ({ email } = pathParameters!);
+      ({ confirmationCode, password } = JSON.parse(body!));
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
         ConfirmationCode: confirmationCode,
@@ -104,7 +106,7 @@ exports.handler = async function (event) {
 
     case "HEAD /sign-up/{email}":
       //resend confirmation for new user
-      ({ email } = pathParameters);
+      ({ email } = pathParameters!);
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
         Username: email,
@@ -113,7 +115,7 @@ exports.handler = async function (event) {
       break;
 
     case "POST /sign-up":
-      ({ email, password } = JSON.parse(body));
+      ({ email, password } = JSON.parse(body!));
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
         Password: password,
@@ -133,8 +135,10 @@ exports.handler = async function (event) {
           .adminGetUser(findExistingUser)
           .promise();
         const userUnConfirmed =
-          UserAttributes.find((entry) => entry.Name === "email_verified")
-            .Value === "false"
+          UserAttributes.find(
+            (entry: { [index: string]: string }) =>
+              entry.Name === "email_verified"
+          ).Value === "false"
             ? false
             : true;
 
@@ -151,7 +155,7 @@ exports.handler = async function (event) {
 
     case "PATCH /sign-up":
       //register new user with confirmation code
-      ({ userName, confirmationCode } = JSON.parse(body));
+      ({ userName, confirmationCode } = JSON.parse(body!));
       params = {
         ClientId: process.env.USER_POOL_CLIENT,
         Username: userName,

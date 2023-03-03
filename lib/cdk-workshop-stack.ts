@@ -1,10 +1,12 @@
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as kms from "aws-cdk-lib/aws-kms";
 import * as iam from "aws-cdk-lib/aws-iam";
-import * as lambda from "aws-cdk-lib/aws-lambda";
+//import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+
+import * as lambda from "aws-cdk-lib/aws-lambda-nodejs";
+import * as lambdaProps from "aws-cdk-lib/aws-lambda";
 
 //s3 and cloud front deployment imports
 import * as path from "path";
@@ -113,10 +115,10 @@ export class CdkWorkshopStack extends cdk.Stack {
     });
 
     //lambda constructor
-    const albumLambda = new lambda.Function(this, "AlbumHandler", {
-      runtime: lambda.Runtime.NODEJS_14_X,
-      code: lambda.Code.fromAsset("lambda"),
-      handler: "albums.handler",
+    const albumLambda = new lambda.NodejsFunction(this, "AlbumHandler", {
+      runtime: lambdaProps.Runtime.NODEJS_14_X,
+      entry: "lambda/albums.ts",
+      handler: "handler",
       environment: {
         ALBUM_TABLE_NAME: table.tableName,
         ALBUM_BUCKET_NAME: s3Bucket.bucketName,
@@ -168,10 +170,10 @@ export class CdkWorkshopStack extends cdk.Stack {
     });
 
     // user pool client needed for user signups, pool id for admin actions
-    const signUp = new lambda.Function(this, "SignUpHandler", {
-      runtime: lambda.Runtime.NODEJS_14_X,
-      code: lambda.Code.fromAsset("lambda"),
-      handler: "signup.handler",
+    const signUp = new lambda.NodejsFunction(this, "SignUpHandler", {
+      runtime: lambdaProps.Runtime.NODEJS_14_X,
+      entry: "lambda/signup.ts",
+      handler: "handler",
       environment: {
         USER_POOL_CLIENT: userPoolClient.userPoolClientId,
         USER_POOL_ID: userPool.userPoolId,
