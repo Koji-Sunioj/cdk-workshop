@@ -28,147 +28,151 @@ exports.handler = async function (event: APIGatewayEvent) {
     routeKey = `${routeKey} ${task}`;
   }
 
-  switch (routeKey) {
-    case "GET /access/{secret}":
-      const secretsmanager = new AWS.SecretsManager();
-      const { secret } = pathParameters!;
-      const { SecretString } = await secretsmanager
-        .getSecretValue({
-          SecretId: "devPw",
-        })
-        .promise();
-      const isDev = secret === JSON.parse(SecretString).secret ? true : false;
-      returnObject = { verified: isDev };
-      break;
+  class HttpError extends Error {
+    httpCode: number;
+    constructor(message: string, { httpCode }: { httpCode: number }) {
+      super(message);
+      this.httpCode = httpCode;
+    }
+  }
 
-    case "POST /auth":
-      //sign up existing user
-      ({ userName, password } = JSON.parse(body!));
-      params = {
-        AuthFlow: "USER_PASSWORD_AUTH",
-        ClientId: process.env.USER_POOL_CLIENT,
-        AuthParameters: { PASSWORD: password, USERNAME: userName },
-      };
-      const {
-        AuthenticationResult: { AccessToken },
-      } = await service.initiateAuth(params).promise();
-      returnObject = { AccessToken: AccessToken };
-      break;
-
-    case "GET /auth/{email}":
-      const userType = await verifyToken(headers);
-      returnObject = { ...userType };
-      break;
-
-    case "HEAD /auth/{email}":
-      //send reset code for existing user
-      ({ email } = pathParameters!);
-      params = {
-        ClientId: process.env.USER_POOL_CLIENT,
-        Username: email,
-      };
-      await service.forgotPassword(params).promise();
-
-      break;
-    case "PATCH /auth/{email} reset":
-      //reset password existing user
-      ({ email } = pathParameters!);
-      ({ password } = JSON.parse(body!));
-      const { type } = await verifyToken(headers);
-      if (type === "user") {
+  try {
+    switch (routeKey) {
+      case "POST /auth":
+        ({ userName, password } = JSON.parse(body!));
         params = {
-          Password: password,
-          UserPoolId: process.env.USER_POOL_ID,
-          Username: email,
-          Permanent: true,
+          AuthFlow: "USER_PASSWORD_AUTH",
+          ClientId: process.env.USER_POOL_CLIENT,
+          AuthParameters: { PASSWORD: password, USERNAME: userName },
         };
-        await service.adminSetUserPassword(params).promise();
-        returnObject = { message: "successfully updated" };
-      } else {
-        statusCode = 401;
-        returnObject = { message: "not authorized to reset password" };
-      }
-      break;
+        const {
+          AuthenticationResult: { AccessToken },
+        } = await service.initiateAuth(params).promise();
+        returnObject = { AccessToken: AccessToken };
+        break;
 
-    case "PATCH /auth/{email} forgot":
-      //confirm forgot password with conf code for existing user
-      ({ email } = pathParameters!);
-      ({ confirmationCode, password } = JSON.parse(body!));
-      params = {
-        ClientId: process.env.USER_POOL_CLIENT,
-        ConfirmationCode: confirmationCode,
-        Password: password,
-        Username: email,
-      };
-      await service.confirmForgotPassword(params).promise();
-      returnObject = { message: "successfully updated" };
-      break;
+      case "GET /auth/{email}":
+        const userType = await verifyToken(headers);
+        returnObject = { ...userType };
+        break;
 
-    case "HEAD /sign-up/{email}":
-      //resend confirmation for new user
-      ({ email } = pathParameters!);
-      params = {
-        ClientId: process.env.USER_POOL_CLIENT,
-        Username: email,
-      };
-      await service.resendConfirmationCode(params).promise();
-      break;
-
-    case "POST /sign-up":
-      ({ email, password } = JSON.parse(body!));
-      params = {
-        ClientId: process.env.USER_POOL_CLIENT,
-        Password: password,
-        Username: email,
-      };
-      let newUser;
-      try {
-        //try to create a new user
-        newUser = await service.signUp(params).promise();
-      } catch (e) {
-        //if already exists and not confirmed, delete old entry and sign up again
-        const findExistingUser = {
-          UserPoolId: process.env.USER_POOL_ID,
+      case "HEAD /auth/{email}":
+        ({ email } = pathParameters!);
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
           Username: email,
         };
-        const { UserAttributes } = await service
-          .adminGetUser(findExistingUser)
-          .promise();
-        const userUnConfirmed =
-          UserAttributes.find(
-            (entry: { [index: string]: string }) =>
-              entry.Name === "email_verified"
-          ).Value === "false"
-            ? false
-            : true;
+        await service.forgotPassword(params).promise();
 
-        if (!userUnConfirmed) {
-          await service.adminDeleteUser(findExistingUser).promise();
-          newUser = await service.signUp(params).promise();
+        break;
+      case "PATCH /auth/{email} reset":
+        ({ email } = pathParameters!);
+        ({ password } = JSON.parse(body!));
+        const { type } = await verifyToken(headers);
+        if (type === "user") {
+          params = {
+            Password: password,
+            UserPoolId: process.env.USER_POOL_ID,
+            Username: email,
+            Permanent: true,
+          };
+          await service.adminSetUserPassword(params).promise();
+          returnObject = { message: "successfully updated" };
         } else {
-          newUser = { message: "user already exists" };
-          statusCode = 409;
+          statusCode = 401;
+          returnObject = { message: "not authorized to reset password" };
         }
-      }
-      returnObject = { ...newUser, message: "user created" };
-      break;
+        break;
 
-    case "PATCH /sign-up":
-      //register new user with confirmation code
-      ({ userName, confirmationCode } = JSON.parse(body!));
-      params = {
-        ClientId: process.env.USER_POOL_CLIENT,
-        Username: userName,
-        ConfirmationCode: confirmationCode,
-      };
-      await service.confirmSignUp(params).promise();
-      returnObject = { message: "successfully created" };
-      break;
+      case "PATCH /auth/{email} forgot":
+        ({ email } = pathParameters!);
+        ({ confirmationCode, password } = JSON.parse(body!));
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          ConfirmationCode: confirmationCode,
+          Password: password,
+          Username: email,
+        };
+        await service.confirmForgotPassword(params).promise();
+        returnObject = { message: "successfully updated" };
+        break;
 
-    default:
-      //no matching request
-      statusCode = 404;
-      returnObject = { message: "no matching resource" };
+      case "HEAD /sign-up/{email}":
+        ({ email } = pathParameters!);
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          Username: email,
+        };
+        await service.resendConfirmationCode(params).promise();
+        break;
+
+      case "POST /sign-up":
+        ({ email, password } = JSON.parse(body!));
+        const secretsmanager = new AWS.SecretsManager();
+        const { SecretString } = await secretsmanager
+          .getSecretValue({
+            SecretId: "dev_users",
+          })
+          .promise();
+        const guesList = JSON.parse(SecretString).allows_users.split(",");
+        if (!guesList.includes(email)) {
+          throw new HttpError("user not on guest list", { httpCode: 403 });
+        }
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          Password: password,
+          Username: email,
+        };
+        let newUser;
+        try {
+          newUser = await service.signUp(params).promise();
+        } catch (e) {
+          const findExistingUser = {
+            UserPoolId: process.env.USER_POOL_ID,
+            Username: email,
+          };
+          const { UserAttributes } = await service
+            .adminGetUser(findExistingUser)
+            .promise();
+          const userUnConfirmed =
+            UserAttributes.find(
+              (entry: { [index: string]: string }) =>
+                entry.Name === "email_verified"
+            ).Value === "false"
+              ? false
+              : true;
+
+          if (!userUnConfirmed) {
+            await service.adminDeleteUser(findExistingUser).promise();
+            newUser = await service.signUp(params).promise();
+          } else {
+            newUser = { message: "user already exists" };
+            statusCode = 409;
+          }
+        }
+        returnObject = { ...newUser, message: "user created" };
+        break;
+
+      case "PATCH /sign-up":
+        ({ userName, confirmationCode } = JSON.parse(body!));
+        params = {
+          ClientId: process.env.USER_POOL_CLIENT,
+          Username: userName,
+          ConfirmationCode: confirmationCode,
+        };
+        await service.confirmSignUp(params).promise();
+        returnObject = { message: "successfully created" };
+        break;
+
+      default:
+        statusCode = 404;
+        returnObject = { message: "no matching resource" };
+    }
+  } catch (error) {
+    if (error instanceof HttpError) {
+      statusCode = error.httpCode;
+      returnObject = { message: error.message };
+    }
   }
 
   return {

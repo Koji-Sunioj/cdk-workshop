@@ -193,7 +193,7 @@ export class CdkWorkshopStack extends cdk.Stack {
               "secretsmanager:GetSecretValue",
             ],
             resources: [
-              "arn:aws:secretsmanager:eu-north-1:531997442459:secret:devPw-DXiVdT",
+              "arn:aws:secretsmanager:eu-north-1:531997442459:secret:dev_users-CDP8oE",
               userPool.userPoolArn,
               `arn:aws:cognito-idp:${userPool.stack.region}:${userPool.stack.account}:userpool/${userPoolClient.userPoolClientId}`,
             ],
@@ -209,14 +209,6 @@ export class CdkWorkshopStack extends cdk.Stack {
       defaultCorsPreflightOptions: {
         allowOrigins: apigw.Cors.ALL_ORIGINS,
       },
-    });
-
-    const appAccess = signUpapi.root.addResource("access");
-    const dev = appAccess.addResource("{secret}");
-    dev.addMethod("GET");
-
-    this.accessEndpoint = new cdk.CfnOutput(this, "AccessUrl", {
-      value: `${signUpapi.url}${appAccess.node.id}`,
     });
 
     //sign-in

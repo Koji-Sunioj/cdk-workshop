@@ -8,7 +8,7 @@ Small project to learn the basics of the AWS CDK. Features include:
 - Performing Crud operations via lambda / api gateway to and from Dynamodb and client
 - Understanding Dynamodb syntax, expressions and schema design
 
-I chose not to use Redux for this, to test what things would look like without it in React. Also skipped Typescript since my main goal is learning, and want to speed that up.
+I chose not to use Redux for this, to test what things would look like without it in React. Also skipped Typescript since my main goal is learning, and want to speed that up. I will also slowly refactor the code as I learn more about the services I am using, and where things can be simplified.
 
 # Welcome to your CDK TypeScript project
 

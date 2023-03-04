@@ -1,6 +1,5 @@
 import Form from "react-bootstrap/Form";
 import Alert from "react-bootstrap/Alert";
-import Stack from "react-bootstrap/esm/Stack";
 
 import { globalContext } from "../App";
 import { useContext, useState } from "react";
@@ -62,11 +61,13 @@ function SignIn() {
           />
         </Form.Group>
       </PwInputs>
-      <Stack direction="horizontal" gap={3}>
-        <Link to={"/sign-up"}>Don't have an account yet? Sign up!</Link>
-        <Link to={"/forgot-password"}>Forgot password?</Link>
-      </Stack>
+      <Link className="mb-3" to={"/sign-up"}>
+        Don't have an account yet? Sign up!
+      </Link>
       <br />
+      <Link className="mb-3" to={"/forgot-password"}>
+        Forgot password?
+      </Link>
       <Alert variant={type}>{message}</Alert>
     </ContainerRowCol>
   );

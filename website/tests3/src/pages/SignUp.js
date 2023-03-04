@@ -97,6 +97,12 @@ function SignUp() {
             message: "user already exists",
           });
           break;
+        case 403:
+          setMessage({
+            type: "danger",
+            message: "not on current guest list",
+          });
+          break;
         default:
       }
       setLoading(false);
