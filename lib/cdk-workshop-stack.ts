@@ -180,6 +180,7 @@ export class CdkWorkshopStack extends cdk.Stack {
       },
     });
 
+    process.env.DEFAULT;
     /* this is needed for admin actions in aws-sdk in cognito pool. arn needed 
     for both user pool and client */
     signUp.role?.attachInlinePolicy(

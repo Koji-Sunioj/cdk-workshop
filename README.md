@@ -1,14 +1,14 @@
 # Notes from Koji
 
-Small project to learn the basics of the AWS CDK. Features include:
+This started as a small, casual project to learn how to integrate AWS resources with front-end using AWS CDK. As such, I initially chose not to use Redux and Typescript to focus 100% on the cloud provisioning. I am now refactoring it to be completely built on Redux and Typescript. The backend Lambda will also be minified at one point.
+
+Features include:
 
 - Running a build to an S3 bucket with Cloudflare distribution, which updates when build is updated
 - Handling multiple Api Gateway paths, methods and request patterns
 - Configuring authentication to client via lambda / api gateway, using permissions, environment variables and AWS SDK to perform actions
 - Performing Crud operations via lambda / api gateway to and from Dynamodb and client
 - Understanding Dynamodb syntax, expressions and schema design
-
-I chose not to use Redux for this, to test what things would look like without it in React. Also skipped Typescript since my main goal is learning, and want to speed that up. I will also slowly refactor the code as I learn more about the services I am using, and where things can be simplified.
 
 # Welcome to your CDK TypeScript project
 
