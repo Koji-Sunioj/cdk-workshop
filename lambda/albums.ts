@@ -35,7 +35,7 @@ exports.handler = async function (event: APIGatewayEvent) {
   let routeKey = `${httpMethod} ${resource}`;
   let returnObject = {};
   let statusCode = 200;
-  let type, albumId, s3Object;
+  let type, albumId, s3Object, tags;
   const s3 = new AWS.S3({ signatureVersion: "v4", region: "eu-north-1" });
 
   let dbParams: DbParams = {
@@ -136,6 +136,14 @@ exports.handler = async function (event: APIGatewayEvent) {
       }
       let { Items: albums, Count } = await docClient.scan(dbParams).promise();
 
+      const queryTags = [].concat(
+        ...[].concat(
+          ...albums.map((item: { tags: string[] }) =>
+            item.tags.map((value) => value)
+          )
+        )
+      );
+
       const hasSort =
         hasQuery &&
         "sort" in queryStringParameters &&
@@ -156,10 +164,10 @@ exports.handler = async function (event: APIGatewayEvent) {
         const truPage = 6 * Number(page);
         albums = albums.slice(truPage - 6, truPage);
       }
-
       returnObject = {
         albums: albums,
         pages: Math.ceil(Count / 6),
+        tags: [...new Set(queryTags)],
       };
       break;
     case "POST /albums":

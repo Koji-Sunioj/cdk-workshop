@@ -46,9 +46,13 @@ exports.handler = async function (event: APIGatewayEvent) {
           AuthParameters: { PASSWORD: password, USERNAME: userName },
         };
         const {
-          AuthenticationResult: { AccessToken },
+          AuthenticationResult: { AccessToken, ExpiresIn },
         } = await service.initiateAuth(params).promise();
-        returnObject = { AccessToken: AccessToken };
+        returnObject = {
+          AccessToken: AccessToken,
+          expires: ExpiresIn,
+          userName: userName,
+        };
         break;
 
       case "GET /auth/{email}":
