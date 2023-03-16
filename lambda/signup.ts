@@ -67,8 +67,8 @@ exports.handler = async function (event: APIGatewayEvent) {
           Username: email,
         };
         await service.forgotPassword(params).promise();
-
         break;
+
       case "PATCH /auth/{email} reset":
         ({ email } = pathParameters!);
         ({ password } = JSON.parse(body!));
@@ -83,8 +83,9 @@ exports.handler = async function (event: APIGatewayEvent) {
           await service.adminSetUserPassword(params).promise();
           returnObject = { message: "successfully updated" };
         } else {
-          statusCode = 401;
-          returnObject = { message: "not authorized to reset password" };
+          throw new HttpError("not authorized to reset password", {
+            httpCode: 401,
+          });
         }
         break;
 
@@ -150,13 +151,13 @@ exports.handler = async function (event: APIGatewayEvent) {
             await service.adminDeleteUser(findExistingUser).promise();
             newUser = await service.signUp(params).promise();
           } else {
-            newUser = { message: "user already exists" };
-            statusCode = 409;
+            throw new HttpError("user already exists", {
+              httpCode: 409,
+            });
           }
         }
         returnObject = { ...newUser, message: "user created" };
         break;
-
       case "PATCH /sign-up":
         ({ userName, confirmationCode } = JSON.parse(body!));
         params = {
