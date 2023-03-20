@@ -36,6 +36,8 @@ exports.handler = async function (event: APIGatewayEvent) {
     }
   }
 
+  console.log(routeKey);
+
   try {
     switch (routeKey) {
       case "POST /auth":
@@ -82,10 +84,6 @@ exports.handler = async function (event: APIGatewayEvent) {
           };
           await service.adminSetUserPassword(params).promise();
           returnObject = { message: "successfully updated" };
-        } else {
-          throw new HttpError("not authorized to reset password", {
-            httpCode: 401,
-          });
         }
         break;
 
@@ -174,9 +172,13 @@ exports.handler = async function (event: APIGatewayEvent) {
         returnObject = { message: "no matching resource" };
     }
   } catch (error) {
+    console.log(error);
     if (error instanceof HttpError) {
       statusCode = error.httpCode;
       returnObject = { message: error.message };
+    } else {
+      statusCode = 400;
+      returnObject = { message: (error as { message: string })!.message };
     }
   }
 
