@@ -10,7 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 
 import CardSkeleton from "../components/CardSkeleton";
-import { getAlbums, getTags } from "../utils/albumApi";
+import { getAlbums } from "../utils/albumApi";
 
 const Albums = ({ filterToggle }) => {
   const queryRef = useRef();
@@ -44,7 +44,7 @@ const Albums = ({ filterToggle }) => {
     if (albums === null && fetchFlag === "init") {
       setLoading(true);
       fetchAlbums();
-      fetchTags();
+
       setSearchParams(queryParams);
     } else if (fetchFlag === "get") {
       setGetting(true);
@@ -63,13 +63,9 @@ const Albums = ({ filterToggle }) => {
     }
   }, [albums, fetchFlag, isFromSamePage]);
 
-  const fetchTags = async () => {
-    const { tags } = await getTags();
-    setQueryTags(tags);
-  };
-
   const fetchAlbums = async () => {
-    const { albums, pages: fetchedPages } = await getAlbums(queryParams);
+    const { albums, pages: fetchedPages, tags } = await getAlbums(queryParams);
+    setQueryTags(tags);
     const realPages = new Array(Number(fetchedPages))
       .fill(null)
       .map((v, n) => n + 1);
