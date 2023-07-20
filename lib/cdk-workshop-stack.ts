@@ -100,9 +100,7 @@ export class CdkWorkshopStack extends cdk.Stack {
 
     // cache control and distribution pat needed when updating the build folder
     new BucketDeployment(this, "BucketDeployment", {
-      sources: [
-        Source.asset(path.resolve(__dirname, "../website/tests3/build")),
-      ],
+      sources: [Source.asset(path.resolve(__dirname, "../photo-albums/build"))],
       cacheControl: [CacheControl.fromString("max-age=3000,public,immutable")],
       destinationBucket: bucket,
       distribution,
