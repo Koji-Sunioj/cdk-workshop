@@ -1,10 +1,8 @@
 import * as cdk from "aws-cdk-lib";
 import * as s3 from "aws-cdk-lib/aws-s3";
 import * as iam from "aws-cdk-lib/aws-iam";
-//import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as apigw from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
-
 import * as lambda from "aws-cdk-lib/aws-lambda-nodejs";
 import * as lambdaProps from "aws-cdk-lib/aws-lambda";
 
@@ -21,12 +19,6 @@ import { S3Origin } from "aws-cdk-lib/aws-cloudfront-origins";
 import { Distribution, OriginAccessIdentity } from "aws-cdk-lib/aws-cloudfront";
 
 export class CdkWorkshopStack extends cdk.Stack {
-  public readonly albumInitEndPoint: cdk.CfnOutput;
-  public readonly albumEndPoint: cdk.CfnOutput;
-  public readonly authEndPoint: cdk.CfnOutput;
-  public readonly signUpEndPoint: cdk.CfnOutput;
-  public readonly accessEndpoint: cdk.CfnOutput;
-
   constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
@@ -159,14 +151,6 @@ export class CdkWorkshopStack extends cdk.Stack {
     const s3Delete = album.addResource("{s3Object}");
     s3Delete.addMethod("DELETE");
 
-    this.albumEndPoint = new cdk.CfnOutput(this, "AlbumUrl", {
-      value: `${api.url}${albums.node.id}`,
-    });
-
-    this.albumInitEndPoint = new cdk.CfnOutput(this, "AlbumInitUrl", {
-      value: `${api.url}${albums.node.id}/${init.node.id}/`,
-    });
-
     // user pool client needed for user signups, pool id for admin actions
     const signUp = new lambda.NodejsFunction(this, "SignUpHandler", {
       runtime: lambdaProps.Runtime.NODEJS_14_X,
@@ -213,10 +197,6 @@ export class CdkWorkshopStack extends cdk.Stack {
     //sign-in
     const auth = signUpapi.root.addResource("auth");
 
-    this.authEndPoint = new cdk.CfnOutput(this, "AuthUrl", {
-      value: `${signUpapi.url}${auth.node.id}/`,
-    });
-
     auth.addMethod("POST");
 
     const handlePw = auth.addResource("{email}");
@@ -226,10 +206,6 @@ export class CdkWorkshopStack extends cdk.Stack {
 
     //new user and confirmation email
     const newAuth = signUpapi.root.addResource("sign-up");
-
-    this.signUpEndPoint = new cdk.CfnOutput(this, "SignUpUrl", {
-      value: `${signUpapi.url}${newAuth.node.id}/`,
-    });
 
     newAuth.addMethod("POST");
     newAuth.addMethod("PATCH");
