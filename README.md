@@ -1,6 +1,6 @@
 # Notes from Koji
 
-This started as a small, casual project to learn how to integrate AWS resources with front-end using AWS CDK. As such, I initially chose not to use Redux and Typescript to focus 100% on the cloud provisioning. I am now refactoring it to be completely built on Redux and Typescript. The backend Lambda will also be minified at one point.
+This started as a small, casual project to learn how to integrate AWS resources with front-end using AWS CDK. It has now been refactored using Typescript and Redux to showcase my learnings. 
 
 Features include:
 
