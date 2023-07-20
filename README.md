@@ -1,6 +1,8 @@
 # Notes from Koji
 
-This started as a small, casual project to learn how to integrate AWS resources with front-end using AWS CDK. It has now been refactored using Typescript and Redux to showcase my learnings. 
+This started as a small, casual project to learn how to integrate AWS resources with front-end using AWS CDK. It has now been refactored using Typescript and Redux to showcase my learnings.
+
+link to website: https://d1yh66sadgwb8n.cloudfront.net/ 
 
 Features include:
 
